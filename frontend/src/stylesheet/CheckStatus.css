@@ -1,0 +1,22 @@
+/* Remove these classes if using Tailwind */
+.checkstatus {
+    display: flex;
+    justify-content: center;
+    flex-direction: column;
+    align-items: center;
+}
+
+.checkinputfrom {
+    padding: 10px;
+    outline: none;
+    border: none;
+    background-color: #7DBCFA;
+    width: 300px;
+    border-radius: 5px;
+    font-size: large;
+}
+
+#checkbtn {
+    padding: 12px;
+    font-size: 12px;
+}

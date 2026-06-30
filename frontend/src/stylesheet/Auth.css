@@ -1,0 +1,51 @@
+.authform{
+    display: flex;
+    justify-content: center;
+    flex-direction: column;
+    align-items: center;
+    margin: 10px;
+}
+/* input{
+    background-color: #B3B6B7;
+    padding-top: 20px;
+    padding-bottom: 20px;
+    padding-left: 10px;
+    padding-right: 10px;
+    border: none;
+    outline: none;
+} */
+
+.wrongtext{
+    font-size: 13px;
+}
+
+.inputreglog{
+    width: 300px;
+    background-color: #B3B6B7;
+    padding-top: 20px;
+    padding-bottom: 20px;
+    padding-left: 10px;
+    padding-right: 10px;
+    border: none;
+    outline: none;
+}
+
+.wrong{
+    width: 300px;
+}
+
+.inputreglog{
+    margin: 10px;
+    border: 1px solid white;
+    border-radius: 5px;
+    height: 35px;
+}
+
+/* @media only screen and (max-width: 720px ) {
+    .inputreglog{
+        width: 300px;
+    }
+    .inputauth{
+        width: 300px;
+    }
+} */

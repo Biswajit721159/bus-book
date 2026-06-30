@@ -1,0 +1,10 @@
+.startButton {
+    margin-top: 5px;
+    cursor: pointer;
+}
+
+.starloader {
+    margin-top: 8px;
+    margin-left: 2px;
+    color: #36d7b7
+}

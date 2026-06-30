@@ -4,7 +4,9 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="9e63f42a-8ec5-4ea7-a33f-002ed4334d21" name="Changes" comment="" />
+    <list default="true" id="9e63f42a-8ec5-4ea7-a33f-002ed4334d21" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -13,6 +15,18 @@
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
+  <component name="GitHubPullRequestSearchHistory"><![CDATA[{
+  "lastFilter": {
+    "state": "OPEN",
+    "assignee": "Biswajit721159"
+  }
+}]]></component>
+  <component name="GithubPullRequestsUISettings"><![CDATA[{
+  "selectedUrlAndAccountId": {
+    "url": "https://github.com/Biswajit721159/bus-book.git",
+    "accountId": "52374537-e873-4e2d-a960-98bad8d1f4ea"
+  }
+}]]></component>
   <component name="ProjectColorInfo">{
   &quot;associatedIndex&quot;: 2,
   &quot;fromUser&quot;: false
@@ -57,7 +71,7 @@
       <option name="presentableId" value="Default" />
       <updated>1782821754715</updated>
       <workItem from="1782821756074" duration="619000" />
-      <workItem from="1782822410864" duration="58000" />
+      <workItem from="1782822410864" duration="1421000" />
     </task>
     <servers />
   </component>

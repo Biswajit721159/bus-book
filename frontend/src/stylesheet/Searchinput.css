@@ -1,0 +1,12 @@
+.searchinputfrom{
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    padding: 10px;
+    background-color: #D5DBDB;
+    border-radius: 5px;
+    margin-left: 75%;
+    margin-top: 5px;
+    outline: none;
+    border: none;
+}

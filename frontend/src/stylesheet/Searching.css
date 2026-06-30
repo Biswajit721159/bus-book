@@ -1,0 +1,153 @@
+.searching {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-top: 12px;
+}
+
+
+.form-select1 {
+    background-color: #7DBCFA;
+    padding: 16px;
+    appearance: none;
+    border-radius: none;
+    border: none;
+    outline: none;
+    border-radius: 5px;
+}
+
+.form-control1 {
+    background-color: #7DBCFA;
+    border: none;
+    outline: none;
+    border-radius: 5px;
+    padding: 16px;
+}
+
+.icon {
+    color: #000000 !important;
+    font-size: 38px;
+    color: black;
+    text-align: center;
+    margin-top: 10px;
+    border-radius: 1px solid black;
+    cursor: pointer;
+}
+
+@media only screen and (max-width: 1000px) {
+    .form-select1 {
+        padding: 12px;
+    }
+
+    .form-control1 {
+        padding: 12px;
+    }
+
+    #btn1 {
+        height: 50px;
+    }
+
+    #btn2 {
+        height: 50px;
+    }
+}
+
+@media only screen and (max-width: 877px) {
+    .form-select1 {
+        height: 40px;
+        width: 150px;
+        padding: 10px;
+    }
+
+    .form-control1 {
+        height: 40px;
+        width: 150px;
+        padding: 10px;
+    }
+
+    #btn1 {
+        height: 40px;
+    }
+
+    #btn2 {
+        height: 40px;
+    }
+
+    .icon {
+        font-size: 20px;
+        margin-top: 10px;
+    }
+}
+
+@media only screen and (max-width: 734px) {
+    .form-select1 {
+        height: 30px;
+        width: 120px;
+        padding: 5px;
+    }
+
+    .form-control1 {
+        height: 30px;
+        width: 120px;
+        padding: 5px;
+    }
+
+    #btn1 {
+        height: 30px;
+    }
+
+    #btn2 {
+        height: 30px;
+    }
+
+    .icon {
+        margin-top: 5px;
+    }
+}
+
+@media only screen and (max-width: 585px) {
+    .form-select1 {
+        height: 25px;
+        width: 120px;
+        padding: 5px;
+    }
+
+    .form-control1 {
+        height: 25px;
+        width: 120px;
+        padding: 5px;
+    }
+
+    #btn1 {
+        height: 25px;
+    }
+
+    #btn2 {
+        height: 25px;
+    }
+
+    .icon {
+        margin-top: 7px;
+    }
+}
+
+@media only screen and (max-width: 560px) {
+    .form-select1 {
+        width: 110px;
+    }
+
+    .form-control1 {
+        width: 110px;
+    }
+}
+
+@media only screen and (max-width: 485px) {
+    #btn1 {
+        margin-top: 10px;
+    }
+
+    #btn2 {
+        margin-top: 10px;
+    }
+}
