@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Booking Confirmation - BusBooking</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f3f4f6;
+            margin: 0;
+            padding: 0;
+            -webkit-font-smoothing: antialiased;
+        }
+        .container {
+            max-width: 600px;
+            margin: 40px auto;
+            background: #ffffff;
+            border-radius: 16px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+            overflow: hidden;
+            border: 1px solid #e5e7eb;
+        }
+        .header {
+            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+            padding: 30px 20px;
+            text-align: center;
+            color: #ffffff;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 24px;
+            font-weight: 700;
+            letter-spacing: -0.025em;
+        }
+        .header p {
+            margin: 8px 0 0 0;
+            font-size: 15px;
+            opacity: 0.9;
+        }
+        .content {
+            padding: 30px 25px;
+            color: #1f2937;
+            line-height: 1.6;
+        }
+        .content h2 {
+            font-size: 18px;
+            font-weight: 600;
+            margin-top: 0;
+            color: #111827;
+        }
+        .content p {
+            font-size: 15px;
+            color: #4b5563;
+            margin-bottom: 20px;
+        }
+        .ticket-card {
+            background-color: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 25px;
+        }
+        .ticket-row {
+            display: flex;
+            justify-content: space-between;
+            border-bottom: 1px dashed #e5e7eb;
+            padding: 10px 0;
+        }
+        .ticket-row:last-child {
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+        .ticket-row:first-child {
+            padding-top: 0;
+        }
+        .ticket-label {
+            font-weight: 500;
+            color: #6b7280;
+            font-size: 14px;
+        }
+        .ticket-value {
+            font-weight: 600;
+            color: #111827;
+            font-size: 14px;
+            text-align: right;
+        }
+        .passenger-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+            margin-bottom: 25px;
+        }
+        .passenger-table th {
+            background-color: #f3f4f6;
+            color: #374151;
+            font-weight: 600;
+            text-align: left;
+            padding: 10px 12px;
+            font-size: 13px;
+            border-bottom: 2px solid #e5e7eb;
+        }
+        .passenger-table td {
+            padding: 10px 12px;
+            border-bottom: 1px solid #e5e7eb;
+            color: #4b5563;
+            font-size: 14px;
+        }
+        .footer {
+            background-color: #f9fafb;
+            padding: 24px;
+            text-align: center;
+            font-size: 13px;
+            color: #9ca3af;
+            border-top: 1px solid #e5e7eb;
+        }
+        .footer a {
+            color: #4f46e5;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        .icon {
+            font-size: 36px;
+            margin-bottom: 8px;
+        }
+        .status-badge {
+            display: inline-block;
+            background-color: #d1fae5;
+            color: #065f46;
+            padding: 2px 8px;
+            border-radius: 9999px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="icon">🎟️</div>
+            <h1>Booking Confirmed!</h1>
+            <p>Thank you for choosing BusBooking. Have a safe journey!</p>
+        </div>
+        <div class="content">
+            <h2>Hi {{name}},</h2>
+            <p>Your ticket has been booked successfully. Below are your booking details:</p>
+            
+            <div class="ticket-card">
+                <div class="ticket-row">
+                    <span class="ticket-label">Booking ID</span>
+                    <span class="ticket-value">#{{bookingId}}</span>
+                </div>
+                <div class="ticket-row">
+                    <span class="ticket-label">Bus Name</span>
+                    <span class="ticket-value">{{busName}}</span>
+                </div>
+                <div class="ticket-row">
+                    <span class="ticket-label">Route</span>
+                    <span class="ticket-value">{{source}} ➔ {{destination}}</span>
+                </div>
+                <div class="ticket-row">
+                    <span class="ticket-label">Journey Date & Time</span>
+                    <span class="ticket-value">{{journeyDate}}</span>
+                </div>
+                <div class="ticket-row">
+                    <span class="ticket-label">Total Amount Paid</span>
+                    <span class="ticket-value" style="color: #4f46e5; font-size: 16px;">Rs. {{amount}}</span>
+                </div>
+                <div class="ticket-row">
+                    <span class="ticket-label">Status</span>
+                    <span class="ticket-value"><span class="status-badge">CONFIRMED</span></span>
+                </div>
+            </div>
+
+            <h2>Passenger & Seat Details</h2>
+            <table class="passenger-table">
+                <thead>
+                    <tr>
+                        <th>Passenger Name</th>
+                        <th>Seat Number</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {{passengerSeats}}
+                </tbody>
+            </table>
+
+            <p>Please print this email or show the digital copy on your phone along with a valid ID proof at the time of boarding.</p>
+        </div>
+        <div class="footer">
+            <p>&copy; 2026 BusBooking Inc. All rights reserved.</p>
+            <p>Need help? Contact our support at <a href="mailto:support@busbooking.com">support@busbooking.com</a></p>
+        </div>
+    </div>
+</body>
+</html>
