@@ -79,6 +79,40 @@ public class AuthService {
     }
 
     @Transactional
+    public void registerBusOwner(BusOwnerRegisterDTO body) {
+        log.info("Processing bus owner registration for email: {}", body.getEmail());
+        Optional<User> existedUser = userRepository.findByEmail(body.getEmail());
+        User user;
+
+        if (existedUser.isPresent()) {
+            if (existedUser.get().isEmailVerified()) {
+                throw new ConflictException("Email already exists");
+            } else {
+                user = existedUser.get();
+                user.setName(body.getFullName());
+                user.setPassword(passwordEncoder.encode(body.getPassword()));
+                user.setCompanyName(body.getCompanyName());
+                user.setPhoneNumber(body.getPhoneNumber());
+                user.setRole(Role.BUS_OWNER);
+            }
+        } else {
+            user = new User();
+            user.setName(body.getFullName());
+            user.setEmail(body.getEmail());
+            user.setPassword(passwordEncoder.encode(body.getPassword()));
+            user.setCompanyName(body.getCompanyName());
+            user.setPhoneNumber(body.getPhoneNumber());
+            user.setRole(Role.BUS_OWNER);
+            user.setEmailVerified(false);
+        }
+        String otp = generateOtp();
+        setOtpAndExpiryTime(user, otp);
+        userRepository.saveAndFlush(user);
+
+        notificationClientService.sendEmailOtpRequest(user.getEmail(), "Verify your Bus Owner account", otp, "Confirm your registration with BusBooking", user);
+    }
+
+    @Transactional
     public void verifyRegisterEmail(RegisterVerifyDTO body) {
         log.info("Verifying registration OTP for email: {}", body.getEmail());
         User user = userRepository.findByEmail(body.getEmail()).orElseThrow(() -> new ResourceNotFoundException("User not found"));
@@ -158,7 +192,38 @@ public class AuthService {
         clearOtpAndExpiryTime(user);
         userRepository.save(user);
 
-        return LoginResponseDTO.builder().token(jwtUtil.generateToken(user)).email(user.getEmail()).name(user.getName()).build();
+        return LoginResponseDTO.builder()
+                .token(jwtUtil.generateToken(user))
+                .email(user.getEmail())
+                .name(user.getName())
+                .role(user.getRole() != null ? user.getRole().name() : null)
+                .companyName(user.getCompanyName())
+                .phoneNumber(user.getPhoneNumber())
+                .build();
+    }
+
+    @Transactional
+    public String adminLogin(LoginDTO body) {
+        log.info("Processing admin login request for email: {}", body.getEmail());
+        User user = userRepository.findByEmail(body.getEmail()).orElseThrow(() -> new UnauthorizedException("Invalid email or password"));
+        
+        if (user.getRole() == Role.NORMAL_USER) {
+            throw new UnauthorizedException("Access denied. Admin privileges required.");
+        }
+
+        return login(body);
+    }
+
+    @Transactional
+    public LoginResponseDTO verifyAdminLoginOtp(OtpVerificationDTO body) {
+        log.info("Verifying admin login OTP for email: {}", body.getEmail());
+        User user = userRepository.findByEmail(body.getEmail()).orElseThrow(() -> new ResourceNotFoundException("User not found"));
+        
+        if (user.getRole() == Role.NORMAL_USER) {
+            throw new UnauthorizedException("Access denied. Admin privileges required.");
+        }
+
+        return verifyLoginOtp(body);
     }
 
     @Transactional
@@ -257,7 +322,14 @@ public class AuthService {
                 userRepository.saveAndFlush(user);
             }
 
-            return LoginResponseDTO.builder().token(jwtUtil.generateToken(user)).email(user.getEmail()).name(user.getName()).build();
+            return LoginResponseDTO.builder()
+                    .token(jwtUtil.generateToken(user))
+                    .email(user.getEmail())
+                    .name(user.getName())
+                    .role(user.getRole() != null ? user.getRole().name() : null)
+                    .companyName(user.getCompanyName())
+                    .phoneNumber(user.getPhoneNumber())
+                    .build();
 
         } catch (Exception e) {
             log.error("Google authentication failed", e);
@@ -265,6 +337,62 @@ public class AuthService {
                 throw (RuntimeException) e;
             }
             throw new UnauthorizedException("Google authentication failed: " + e.getMessage());
+        }
+    }
+
+    @Transactional
+    public LoginResponseDTO adminGoogleLogin(GoogleLoginDTO body) {
+        log.info("Processing Admin Google login request");
+        try {
+            NetHttpTransport transport = new NetHttpTransport();
+            GsonFactory jsonFactory = GsonFactory.getDefaultInstance();
+
+            GoogleIdTokenVerifier verifier = new GoogleIdTokenVerifier.Builder(transport, jsonFactory).setAudience(Collections.singletonList(googleClientId)).build();
+
+            GoogleIdToken idToken = verifier.verify(body.getToken());
+            if (idToken == null) {
+                throw new UnauthorizedException("Invalid Google ID token");
+            }
+
+            GoogleIdToken.Payload payload = idToken.getPayload();
+            String email = payload.getEmail();
+
+            if (email == null) {
+                throw new BadRequestException("Google ID token does not contain email address");
+            }
+
+            Optional<User> userOpt = userRepository.findByEmail(email);
+            if (userOpt.isEmpty()) {
+                throw new UnauthorizedException("Access denied. Admin privileges required. Please register first.");
+            }
+
+            User user = userOpt.get();
+            if (user.getRole() == Role.NORMAL_USER) {
+                throw new UnauthorizedException("Access denied. Admin privileges required.");
+            }
+            if (user.isBlocked()) {
+                throw new UnauthorizedException("Your account is blocked");
+            }
+            if (!user.isEmailVerified()) {
+                user.setEmailVerified(true);
+                userRepository.save(user);
+            }
+
+            return LoginResponseDTO.builder()
+                    .token(jwtUtil.generateToken(user))
+                    .email(user.getEmail())
+                    .name(user.getName())
+                    .role(user.getRole() != null ? user.getRole().name() : null)
+                    .companyName(user.getCompanyName())
+                    .phoneNumber(user.getPhoneNumber())
+                    .build();
+
+        } catch (Exception e) {
+            log.error("Admin Google authentication failed", e);
+            if (e instanceof UnauthorizedException || e instanceof BadRequestException) {
+                throw (RuntimeException) e;
+            }
+            throw new UnauthorizedException("Admin Google authentication failed: " + e.getMessage());
         }
     }
 

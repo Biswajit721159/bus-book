@@ -42,6 +42,12 @@ public class User {
     @Column(nullable = false)
     private String password;
 
+    @Column(length = 100)
+    private String companyName;
+
+    @Column(length = 20)
+    private String phoneNumber;
+
     // ================= ROLE =================
 
     @Builder.Default

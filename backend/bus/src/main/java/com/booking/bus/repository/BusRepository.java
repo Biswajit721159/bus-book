@@ -8,11 +8,16 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
+import com.booking.bus.enums.BusStatus;
+
 @Repository
 public interface BusRepository extends JpaRepository<Bus, Long> {
     boolean existsByBusNameAndCreatedByAndIsActiveTrue(String busName, Long createdBy);
 
     List<Bus> findByCreatedByAndIsActiveTrue(Long createdBy);
+    List<Bus> findByIsActiveTrue();
+    List<Bus> findByStatusInAndIsActiveTrue(List<BusStatus> statuses);
+    List<Bus> findByCreatedByAndStatusInAndIsActiveTrue(Long createdBy, List<BusStatus> statuses);
 
     @Query("""
         SELECT DISTINCT b

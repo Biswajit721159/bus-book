@@ -15,6 +15,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/buses")
@@ -31,6 +32,7 @@ public class BusController {
             @Valid @RequestBody BusRequestDTO body,
             Authentication authentication
     ) {
+        System.out.println(body);
         User currentUser = (User) authentication.getPrincipal();
         BusResponseDTO savedBus = busService.addBus(body, currentUser);
         return ResponseEntity
@@ -46,6 +48,11 @@ public class BusController {
         return ResponseEntity.ok(ApiResponse.success("Buses fetched successfully", buses, HttpStatus.OK.value()));
     }
 
+    @GetMapping("/internal/owner/{ownerId}")
+    public ResponseEntity<List<Long>> getBusIdsByOwner(@PathVariable Long ownerId) {
+        return ResponseEntity.ok(busService.getBusIdsByOwner(ownerId));
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<NormalUserBusResponseDto>> getBusById(@PathVariable Long id) {
         NormalUserBusResponseDto busResponse = busService.getBusById(id);
@@ -56,6 +63,40 @@ public class BusController {
     public ResponseEntity<ApiResponse<List<BusSearchResponseDTO>>> searchBus(@RequestBody SearchBusByUserDTO body) {
         List<BusSearchResponseDTO> searchResults = busService.searchBus(body);
         return ResponseEntity.ok(ApiResponse.success("Buses searched successfully", searchResults, HttpStatus.OK.value()));
+    }
+
+    @PreAuthorize("hasAnyRole('BUS_OWNER', 'SUPER_ADMIN')")
+    @PostMapping("/filter")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> getBusesByFilter(
+            @Valid @RequestBody BusFilterRequestDTO body,
+            Authentication authentication
+    ) {
+        User currentUser = (User) authentication.getPrincipal();
+        Map<String, Object> result = busService.getBusesByFilter(body, currentUser);
+        return ResponseEntity.ok(ApiResponse.success("Buses filtered successfully", result, HttpStatus.OK.value()));
+    }
+
+    @PreAuthorize("hasAnyRole('BUS_OWNER', 'SUPER_ADMIN')")
+    @PutMapping("/{id}")
+    public ResponseEntity<ApiResponse<BusResponseDTO>> updateBus(
+            @PathVariable Long id,
+            @Valid @RequestBody BusRequestDTO body,
+            Authentication authentication
+    ) {
+        User currentUser = (User) authentication.getPrincipal();
+        BusResponseDTO updatedBus = busService.updateBus(id, body, currentUser);
+        return ResponseEntity.ok(ApiResponse.success("Bus updated successfully", updatedBus, HttpStatus.OK.value()));
+    }
+
+    @PreAuthorize("hasAnyRole('BUS_OWNER', 'SUPER_ADMIN')")
+    @DeleteMapping("/{id}")
+    public ResponseEntity<ApiResponse<Void>> deleteBus(
+            @PathVariable Long id,
+            Authentication authentication
+    ) {
+        User currentUser = (User) authentication.getPrincipal();
+        busService.deleteBus(id, currentUser);
+        return ResponseEntity.ok(ApiResponse.success("Bus deleted successfully", null, HttpStatus.OK.value()));
     }
 }
 

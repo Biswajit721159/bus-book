@@ -1,6 +1,5 @@
 package com.booking.bus.entities;
 
-import com.booking.bus.entities.Booking.Bookings;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
@@ -27,9 +26,8 @@ public class CustomerReview {
     @Column(name = "created_by", nullable = false)
     private Long user;
 
-    @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name="booking_id", nullable = false)
-    private Bookings booking;
+    @Column(name = "booking_id", nullable = false)
+    private Long bookingId;
 
     // ================= BASIC INFO =================
 

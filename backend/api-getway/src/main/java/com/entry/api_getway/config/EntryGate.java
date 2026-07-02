@@ -41,6 +41,14 @@ public class EntryGate {
                                 "/api/auth/google-login",
                                 "/api/auth/otp-request",
                                 "/api/auth/verify-otp-request",
+                                "/api/bus-owner/login",
+                                "/api/bus-owner/register",
+                                "/api/bus-owner/google-login",
+                                "/api/bus-owner/login/verify-otp",
+                                "/api/bus-owner/register/verify-otp",
+                                "/api/bus-owner/forgot-password",
+                                "/api/bus-owner/reset-password",
+                                "/api/bus-owner/resent-otp",
                                 "/api/stations/get-all",
                                 "/api/buses/search",
                                 "/api/buses/{id}",
@@ -65,11 +73,16 @@ public class EntryGate {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
+        java.util.List<String> origins = new java.util.ArrayList<>();
         if (allowedOrigins != null && !allowedOrigins.isBlank()) {
-            configuration.setAllowedOrigins(Arrays.asList(allowedOrigins.split(",")));
+            origins.addAll(Arrays.asList(allowedOrigins.split(",")));
         } else {
-            configuration.setAllowedOrigins(Arrays.asList("http://localhost:3000", "http://localhost:5173"));
+            origins.addAll(Arrays.asList("http://localhost:3000", "http://localhost:5173"));
         }
+        if (!origins.contains("http://localhost:3001")) {
+            origins.add("http://localhost:3001");
+        }
+        configuration.setAllowedOrigins(origins);
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
         configuration.setAllowedHeaders(Arrays.asList("*"));
         configuration.setAllowCredentials(true);
