@@ -22,10 +22,8 @@ public class MasterList {
 
     // ================= RELATION =================
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "created_by", nullable = false)
-    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
-    private User createdBy;
+    @Column(name = "created_by", nullable = false)
+    private Long createdBy;
 
     // ================= BASIC INFO =================
 
@@ -36,8 +34,9 @@ public class MasterList {
 
     // ================= STATUS =================
 
-    @Column(nullable = false)
-    private boolean isActive = true;
+    @Builder.Default
+    @Column(name = "is_active", nullable = false)
+    private boolean active = true;
 
     // ================= TIMESTAMPS =================
 

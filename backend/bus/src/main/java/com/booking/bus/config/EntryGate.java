@@ -42,6 +42,7 @@ public class EntryGate {
                                 "/api/stations/get-all",
                                 "/api/buses/search",
                                 "/api/buses/{id}",
+                                "/api/buses/internal/**",
                                 "/api/seat/count",
                                 "/api/booking/guest/{id}",
                                 "/api/auth/google-login",

@@ -24,20 +24,20 @@ public class MasterListService {
 
     public List<ResponseDTO> getMasterList(User currentUser) {
         log.info("Fetching master list for user: {}", currentUser.getEmail());
-        List<MasterList> list = masterListRepository.findByCreatedByAndIsActiveTrue(currentUser);
+        List<MasterList> list = masterListRepository.findByCreatedByAndActiveTrue(currentUser.getId());
         return list.stream().map(ResponseDTO::new).toList();
     }
 
     @Transactional
     public ResponseDTO addMasterListRecord(RequestDTO body, User currentUser) {
         log.info("Adding master list record '{}' for user: {}", body.getName(), currentUser.getEmail());
-        if (masterListRepository.existsByNameAndCreatedByAndIsActiveTrue(body.getName(), currentUser)) {
+        if (masterListRepository.existsByNameAndCreatedByAndActiveTrue(body.getName(), currentUser.getId())) {
             throw new ConflictException("A master list record with this name already exists");
         }
 
         MasterList newRecord = new MasterList();
         newRecord.setName(body.getName());
-        newRecord.setCreatedBy(currentUser);
+        newRecord.setCreatedBy(currentUser.getId());
         newRecord.setActive(true);
 
         MasterList savedRecord = masterListRepository.save(newRecord);
@@ -50,11 +50,11 @@ public class MasterListService {
         MasterList existingRecord = masterListRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Record not found"));
 
-        if (!existingRecord.getCreatedBy().getId().equals(currentUser.getId())) {
+        if (!existingRecord.getCreatedBy().equals(currentUser.getId())) {
             throw new UnauthorizedException("Unauthorized to update this record");
         }
 
-        if (masterListRepository.existsByNameAndCreatedByAndIsActiveTrueAndIdNot(body.getName(), currentUser, id)) {
+        if (masterListRepository.existsByNameAndCreatedByAndActiveTrueAndIdNot(body.getName(), currentUser.getId(), id)) {
             throw new ConflictException("A master list record with this name already exists");
         }
 
@@ -68,7 +68,7 @@ public class MasterListService {
         MasterList existingRecord = masterListRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Record not found"));
 
-        if (!existingRecord.getCreatedBy().getId().equals(currentUser.getId())) {
+        if (!existingRecord.getCreatedBy().equals(currentUser.getId())) {
             throw new UnauthorizedException("Unauthorized to delete this record");
         }
 

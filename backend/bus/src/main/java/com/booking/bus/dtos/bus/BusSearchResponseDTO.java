@@ -27,7 +27,7 @@ public class BusSearchResponseDTO {
         BusSearchResponseDTO dto = new BusSearchResponseDTO();
         dto.busId = String.valueOf(bus.getId());
         dto.busName = bus.getBusName();
-        
+
         List<Station> sortedStations = bus.getStations().stream()
                 .sorted(Comparator.comparingInt(Station::getStationOrder))
                 .toList();
@@ -54,7 +54,7 @@ public class BusSearchResponseDTO {
         if (start != null && end != null) {
             dto.sourceStationName = start.getStationName();
             dto.destinationStationName = end.getStationName();
-            
+
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm");
             dto.arrivalTime = start.getArrivalTime().format(formatter);
             dto.departureTime = end.getArrivalTime().format(formatter);

@@ -10,7 +10,7 @@ import java.util.List;
 
 @Repository
 public interface MasterListRepository extends JpaRepository<MasterList, Long> {
-    List<MasterList> findByCreatedByAndIsActiveTrue(User createdBy);
-    boolean existsByNameAndCreatedByAndIsActiveTrue(String name, User createdBy);
-    boolean existsByNameAndCreatedByAndIsActiveTrueAndIdNot(String name, User createdBy, Long id);
+    List<MasterList> findByCreatedByAndActiveTrue(Long createdBy);
+    boolean existsByNameAndCreatedByAndActiveTrue(String name, Long createdBy);
+    boolean existsByNameAndCreatedByAndActiveTrueAndIdNot(String name, Long createdBy, Long id);
 }

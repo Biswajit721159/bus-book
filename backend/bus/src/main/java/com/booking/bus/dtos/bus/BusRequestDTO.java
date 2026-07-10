@@ -23,4 +23,6 @@ public class BusRequestDTO {
     @NotEmpty(message = "At least one station is required")
     @Valid
     private List<StationRequestDTO> stations;
+
+    private String status;
 }

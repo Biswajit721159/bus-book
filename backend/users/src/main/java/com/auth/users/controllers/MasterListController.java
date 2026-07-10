@@ -17,22 +17,23 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/master-list")
-@Tag(name="This end point is for add, edit, delete from master list")
+@Tag(name = "This end point is for add, edit, delete from master list")
 public class MasterListController {
 
     @Autowired
     private MasterListService masterListService;
 
     @GetMapping("")
-    public ResponseEntity<ApiResponse<List<ResponseDTO>>> getUser(Authentication authentication){
+    public ResponseEntity<ApiResponse<List<ResponseDTO>>> getUser(Authentication authentication) {
         User currentUser = (User) authentication.getPrincipal();
         List<ResponseDTO> responseList = masterListService.getMasterList(currentUser);
         return ResponseEntity.ok(ApiResponse.success("Master list fetched successfully", responseList, HttpStatus.OK.value()));
     }
 
     @PostMapping("")
-    public ResponseEntity<ApiResponse<ResponseDTO>> addUser(@Valid @RequestBody RequestDTO body, Authentication authentication){
+    public ResponseEntity<ApiResponse<ResponseDTO>> addUser(@Valid @RequestBody RequestDTO body, Authentication authentication) {
         User currentUser = (User) authentication.getPrincipal();
+        System.out.println(authentication);
         ResponseDTO newRecord = masterListService.addMasterListRecord(body, currentUser);
         return ResponseEntity
                 .status(HttpStatus.CREATED)
@@ -43,7 +44,7 @@ public class MasterListController {
     public ResponseEntity<ApiResponse<Void>> updateUser(
             @PathVariable Long id,
             @Valid @RequestBody RequestDTO body,
-            Authentication authentication){
+            Authentication authentication) {
         User currentUser = (User) authentication.getPrincipal();
         masterListService.updateMasterListRecord(id, body, currentUser);
         return ResponseEntity.ok(ApiResponse.success("Record updated successfully", null, HttpStatus.OK.value()));
@@ -52,7 +53,7 @@ public class MasterListController {
     @DeleteMapping("/{id}")
     public ResponseEntity<ApiResponse<Void>> delete(
             @PathVariable Long id,
-            Authentication authentication){
+            Authentication authentication) {
         User currentUser = (User) authentication.getPrincipal();
         masterListService.deleteMasterListRecord(id, currentUser);
         return ResponseEntity.ok(ApiResponse.success("Record soft-deleted successfully", null, HttpStatus.OK.value()));
