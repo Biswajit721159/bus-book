@@ -46,9 +46,7 @@ public class WishlistService {
 
     public void updateWishListForAll(List<Bookings> bookings, List<BookingTicketResponseDTo> finalBookings, User user) {
         List<Wishlist> wishlists = wishlistRepository.findAllByBookingIdAndCreatedBy(bookings, user.getId());
-        Set<Long> wishlistIds = wishlists.stream()
-                .map(wishlist -> wishlist.getBooking().getId())
-                .collect(Collectors.toSet());
+        Set<Long> wishlistIds = wishlists.stream().map(wishlist -> wishlist.getBooking().getId()).collect(Collectors.toSet());
         for (BookingTicketResponseDTo finalBooking : finalBookings) {
             if (wishlistIds.contains(finalBooking.getId())) {
                 finalBooking.updateWishListedStatus(true);

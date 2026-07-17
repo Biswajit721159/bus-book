@@ -21,14 +21,9 @@ public class SeatLockController {
     private SeatLockService seatLockService;
 
     @PostMapping
-    public ResponseEntity<ApiResponse<Map<String, Object>>> lockSeat(
-            @Valid @RequestBody TicketLockRequestBodyDTO body,
-            Authentication authentication
-    ) {
+    public ResponseEntity<ApiResponse<Map<String, Object>>> lockSeat(@Valid @RequestBody TicketLockRequestBodyDTO body, Authentication authentication) {
         if (authentication == null || !(authentication.getPrincipal() instanceof User currentUser)) {
-            return ResponseEntity
-                    .status(HttpStatus.UNAUTHORIZED)
-                    .body(ApiResponse.error("Unauthorized", HttpStatus.UNAUTHORIZED.value()));
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ApiResponse.error("Unauthorized", HttpStatus.UNAUTHORIZED.value()));
         }
 
         Map<String, Object> result = seatLockService.lockSeats(body, currentUser);

@@ -17,4 +17,7 @@ public interface BookingRepository extends JpaRepository<Bookings, Long> {
 
     @Query("SELECT b FROM Bookings b WHERE b.busId = :busId AND DATE(b.bookingDate) = DATE(:date) AND b.status = 'CONFIRMED'")
     List<Bookings> findByBusIdAndDate(@Param("busId") Long busId, @Param("date") LocalDateTime date);
+
+    @Query("SELECT b FROM Bookings b WHERE b.busId = :busId AND DATE(b.bookingDate) = DATE(:date) AND b.status = 'CONFIRMED'")
+    org.springframework.data.domain.Page<Bookings> findByBusIdAndDate(@Param("busId") Long busId, @Param("date") LocalDateTime date, org.springframework.data.domain.Pageable pageable);
 }

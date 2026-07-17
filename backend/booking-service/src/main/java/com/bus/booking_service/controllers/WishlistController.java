@@ -17,9 +17,7 @@ public class WishlistController {
     @PostMapping("/{bookingId}")
     public ResponseEntity<ApiResponse<Object>> add(@PathVariable Long bookingId, Authentication authentication) {
         if (authentication == null || !(authentication.getPrincipal() instanceof User currentUser)) {
-            return ResponseEntity
-                    .status(HttpStatus.UNAUTHORIZED)
-                    .body(ApiResponse.error("Unauthorized", HttpStatus.UNAUTHORIZED.value()));
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ApiResponse.error("Unauthorized", HttpStatus.UNAUTHORIZED.value()));
         }
         wishlistService.create(bookingId, currentUser);
         return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success("successfully added", null, HttpStatus.CREATED.value()));
@@ -28,9 +26,7 @@ public class WishlistController {
     @DeleteMapping("/{bookingId}")
     public ResponseEntity<ApiResponse<Object>> delete(@PathVariable Long bookingId, Authentication authentication) {
         if (authentication == null || !(authentication.getPrincipal() instanceof User currentUser)) {
-            return ResponseEntity
-                    .status(HttpStatus.UNAUTHORIZED)
-                    .body(ApiResponse.error("Unauthorized", HttpStatus.UNAUTHORIZED.value()));
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ApiResponse.error("Unauthorized", HttpStatus.UNAUTHORIZED.value()));
         }
         System.out.println(bookingId);
         wishlistService.remove(bookingId, currentUser);

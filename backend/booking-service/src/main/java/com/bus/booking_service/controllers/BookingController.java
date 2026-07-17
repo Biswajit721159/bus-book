@@ -32,9 +32,7 @@ public class BookingController {
     @GetMapping
     public ResponseEntity<ApiResponse<Object>> fetchBookings(Authentication authentication) {
         if (authentication == null || !(authentication.getPrincipal() instanceof User currentUser)) {
-            return ResponseEntity
-                    .status(HttpStatus.UNAUTHORIZED)
-                    .body(ApiResponse.error("Unauthorized", HttpStatus.UNAUTHORIZED.value()));
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ApiResponse.error("Unauthorized", HttpStatus.UNAUTHORIZED.value()));
         }
         List<BookingTicketResponseDTo> bookings = bookingService.fetchBookingData(currentUser);
         return ResponseEntity.ok(ApiResponse.success("Bookings successfully fetched", bookings, HttpStatus.OK.value()));
@@ -43,9 +41,7 @@ public class BookingController {
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<Object>> fetchBooking(@PathVariable long id, Authentication authentication) {
         if (authentication == null || !(authentication.getPrincipal() instanceof User currentUser)) {
-            return ResponseEntity
-                    .status(HttpStatus.UNAUTHORIZED)
-                    .body(ApiResponse.error("Unauthorized", HttpStatus.UNAUTHORIZED.value()));
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ApiResponse.error("Unauthorized", HttpStatus.UNAUTHORIZED.value()));
         }
         BookingTicketResponseDTo bookingTicketResponse = bookingService.fetchSeatByBookingId(id, currentUser);
         return ResponseEntity.ok(ApiResponse.success("Booking successfully fetched", bookingTicketResponse, HttpStatus.OK.value()));
@@ -54,9 +50,7 @@ public class BookingController {
     @PostMapping("/cancel")
     public ResponseEntity<ApiResponse<Object>> cancelTicket(@RequestBody cancelTicketDTO body, Authentication authentication) {
         if (authentication == null || !(authentication.getPrincipal() instanceof User currentUser)) {
-            return ResponseEntity
-                    .status(HttpStatus.UNAUTHORIZED)
-                    .body(ApiResponse.error("Unauthorized", HttpStatus.UNAUTHORIZED.value()));
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ApiResponse.error("Unauthorized", HttpStatus.UNAUTHORIZED.value()));
         }
         BookingTicketResponseDTo bookingTicketResponse = bookingService.updateCancelTicket(body, currentUser);
         return ResponseEntity.ok(ApiResponse.success("Ticket cancelled successfully", bookingTicketResponse, HttpStatus.OK.value()));
@@ -69,32 +63,23 @@ public class BookingController {
     }
 
     @PostMapping("/pagination")
-    public ResponseEntity<ApiResponse<Map<String, Object>>> getBookingsPagination(
-            @RequestBody BookingQueryDTO query,
-            Authentication authentication
-    ) {
+    public ResponseEntity<ApiResponse<Map<String, Object>>> getBookingsPagination(@RequestBody BookingQueryDTO query, Authentication authentication) {
         if (authentication == null || !(authentication.getPrincipal() instanceof User currentUser)) {
-            return ResponseEntity
-                    .status(HttpStatus.UNAUTHORIZED)
-                    .body(ApiResponse.error("Unauthorized", HttpStatus.UNAUTHORIZED.value()));
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ApiResponse.error("Unauthorized", HttpStatus.UNAUTHORIZED.value()));
         }
         Map<String, Object> result = bookingService.fetchBookingsPagination(query, currentUser);
         return ResponseEntity.ok(ApiResponse.success("Bookings successfully fetched", result, HttpStatus.OK.value()));
     }
 
-    @PatchMapping("/status")
-    public ResponseEntity<ApiResponse<List<FrontendBookingDTO>>> getBookingStatus(
-            @RequestBody BookingStatusRequestDTO body
-    ) {
+    @PatchMapping("/getTicket/{pageNo}")
+    public ResponseEntity<ApiResponse<List<FrontendBookingDTO>>> getBookingStatus(@PathVariable Integer pageNo, @RequestBody BookingStatusRequestDTO body) {
         LocalDateTime dateTime = LocalDateTime.parse(body.getDate() + "T00:00:00");
-        List<FrontendBookingDTO> bookings = bookingService.getBookingStatus(body.getBus_id(), dateTime);
+        List<FrontendBookingDTO> bookings = bookingService.getBookingStatus(body.getBus_id(), dateTime, pageNo);
         return ResponseEntity.ok(ApiResponse.success("Bookings successfully fetched", bookings, HttpStatus.OK.value()));
     }
 
     @PostMapping("/confirm")
-    public ResponseEntity<ApiResponse<Map<String, Object>>> confirmBooking(
-            @RequestBody BookingConfirmRequestDTO body
-    ) {
+    public ResponseEntity<ApiResponse<Map<String, Object>>> confirmBooking(@RequestBody BookingConfirmRequestDTO body) {
         Map<String, Object> result = seatLockService.confirmBooking(body);
         return ResponseEntity.ok(ApiResponse.success("Booking confirmed successfully", result, HttpStatus.OK.value()));
     }

@@ -33,4 +33,11 @@ public interface BusRepository extends JpaRepository<Bus, Long> {
             @Param("source") String source,
             @Param("destination") String destination
     );
+
+    @Query(value = """
+    SELECT *
+    FROM bus
+    LIMIT 10
+    """, nativeQuery = true)
+    List<Bus> getTopRated();
 }

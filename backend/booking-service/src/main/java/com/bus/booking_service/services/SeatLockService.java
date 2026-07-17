@@ -78,7 +78,8 @@ public class SeatLockService {
             ApiResponse<BusDetailsDTO> response = restClient.get()
                     .uri("/api/buses/" + busId)
                     .retrieve()
-                    .body(new ParameterizedTypeReference<ApiResponse<BusDetailsDTO>>() {});
+                    .body(new ParameterizedTypeReference<ApiResponse<BusDetailsDTO>>() {
+                    });
             return response != null ? response.getData() : null;
         } catch (Exception e) {
             log.error("Failed to fetch details for bus ID: {}", busId, e);
@@ -107,22 +108,15 @@ public class SeatLockService {
         }
 
         // Map station name to order and ID
-        StationDetailsDTO sourceStation = busDetails.getStations().stream()
-                .filter(st -> st.getStationName().equalsIgnoreCase(body.getSource()))
-                .findFirst()
-                .orElseThrow(() -> new BadRequestException("Source station not found on the bus"));
+        StationDetailsDTO sourceStation = busDetails.getStations().stream().filter(st -> st.getStationName().equalsIgnoreCase(body.getSource())).findFirst().orElseThrow(() -> new BadRequestException("Source station not found on the bus"));
 
-        StationDetailsDTO destStation = busDetails.getStations().stream()
-                .filter(st -> st.getStationName().equalsIgnoreCase(body.getDist()))
-                .findFirst()
-                .orElseThrow(() -> new BadRequestException("Destination station not found on the bus"));
+        StationDetailsDTO destStation = busDetails.getStations().stream().filter(st -> st.getStationName().equalsIgnoreCase(body.getDist())).findFirst().orElseThrow(() -> new BadRequestException("Destination station not found on the bus"));
 
         int sourceOrder = sourceStation.getStationOrder();
         int destOrder = destStation.getStationOrder();
 
         // Create station mapping for quick lookup
-        Map<Long, Integer> stationOrderMap = busDetails.getStations().stream()
-                .collect(Collectors.toMap(StationDetailsDTO::getId, StationDetailsDTO::getStationOrder));
+        Map<Long, Integer> stationOrderMap = busDetails.getStations().stream().collect(Collectors.toMap(StationDetailsDTO::getId, StationDetailsDTO::getStationOrder));
 
         // 3. Check for existing booked seats (with station route overlap validation)
         LocalDateTime bookingDateTime = body.getBookingDate().atStartOfDay();
@@ -160,11 +154,7 @@ public class SeatLockService {
         List<Integer> requestedSeats = seatIds.stream().map(Long::intValue).toList();
 
         // 5. Check if any active locks exist on these seats
-        List<SeatLocks> activeLocks = seatLockRepository.findByBusIdAndBookingDateAndSeatNumberIn(
-                body.getBusId(),
-                bookingDateTime,
-                requestedSeats
-        );
+        List<SeatLocks> activeLocks = seatLockRepository.findByBusIdAndBookingDateAndSeatNumberIn(body.getBusId(), bookingDateTime, requestedSeats);
 
         if (!activeLocks.isEmpty()) {
             List<Integer> lockedSeats = activeLocks.stream().map(SeatLocks::getSeatNumber).toList();
@@ -182,17 +172,7 @@ public class SeatLockService {
             int seatNumber = seatIds.get(i).intValue();
             Long passengerId = passengerIds.get(i);
 
-            SeatLocks seatLock = SeatLocks.builder()
-                    .createdBy(currentUser.getId())
-                    .busId(body.getBusId())
-                    .passengerId(passengerId)
-                    .seatNumber(seatNumber)
-                    .bookingDate(bookingDateTime)
-                    .lockedAt(now)
-                    .expiresAt(expiresAt)
-                    .sourceStationId(sourceStation.getId())
-                    .destinationStationId(destStation.getId())
-                    .build();
+            SeatLocks seatLock = SeatLocks.builder().createdBy(currentUser.getId()).busId(body.getBusId()).passengerId(passengerId).seatNumber(seatNumber).bookingDate(bookingDateTime).lockedAt(now).expiresAt(expiresAt).sourceStationId(sourceStation.getId()).destinationStationId(destStation.getId()).build();
 
             seatLockRepository.save(seatLock);
 
@@ -226,9 +206,7 @@ public class SeatLockService {
 
         // Filter locks that have NOT expired
         LocalDateTime now = LocalDateTime.now();
-        List<SeatLocks> activeLocks = locks.stream()
-                .filter(lock -> lock.getExpiresAt().isAfter(now))
-                .toList();
+        List<SeatLocks> activeLocks = locks.stream().filter(lock -> lock.getExpiresAt().isAfter(now)).toList();
 
         if (activeLocks.isEmpty()) {
             log.warn("No active seat locks found for user ID: {} during confirmation. Lock expired.", dto.getUserId());
@@ -238,30 +216,14 @@ public class SeatLockService {
         // 2. Finalize the booking
         SeatLocks firstLock = activeLocks.get(0);
 
-        Bookings booking = Bookings.builder()
-                .createdBy(dto.getUserId())
-                .busId(dto.getBusId())
-                .sourceStationId(firstLock.getSourceStationId())
-                .destinationStationId(firstLock.getDestinationStationId())
-                .bookingDate(firstLock.getBookingDate())
-                .totalAmount(dto.getTotalAmount())
-                .paymentId(dto.getPaymentId())
-                .status(BookingStatus.CONFIRMED)
-                .isActive(true)
-                .build();
+        Bookings booking = Bookings.builder().createdBy(dto.getUserId()).busId(dto.getBusId()).sourceStationId(firstLock.getSourceStationId()).destinationStationId(firstLock.getDestinationStationId()).bookingDate(firstLock.getBookingDate()).totalAmount(dto.getTotalAmount()).paymentId(dto.getPaymentId()).status(BookingStatus.CONFIRMED).isActive(true).build();
 
         bookingRepository.save(booking);
 
         List<BookingSeats> savedSeats = new ArrayList<>();
         StringBuilder seatsHtmlBuilder = new StringBuilder("<ul>");
         for (SeatLocks lock : activeLocks) {
-            BookingSeats seat = BookingSeats.builder()
-                    .createdBy(dto.getUserId())
-                    .bookingId(booking)
-                    .passengerId(lock.getPassengerId())
-                    .seatNumber(lock.getSeatNumber())
-                    .status(SeatStatus.CONFIRMED)
-                    .build();
+            BookingSeats seat = BookingSeats.builder().createdBy(dto.getUserId()).bookingId(booking).passengerId(lock.getPassengerId()).seatNumber(lock.getSeatNumber()).status(SeatStatus.CONFIRMED).build();
 
             bookingSeatRepository.save(seat);
             savedSeats.add(seat);

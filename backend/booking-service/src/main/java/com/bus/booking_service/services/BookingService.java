@@ -26,13 +26,16 @@ import lombok.extern.slf4j.Slf4j;
 import com.bus.booking_service.dtos.BookingQueryDTO;
 import com.bus.booking_service.dtos.FrontendBookingDTO;
 import com.bus.booking_service.dtos.common.ApiResponse;
+
 import java.util.Map;
 import java.util.HashMap;
 import java.util.ArrayList;
 import java.util.Arrays;
+
 import lombok.Getter;
 import lombok.Setter;
 import lombok.NoArgsConstructor;
+
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -55,7 +58,8 @@ public class BookingService {
             return restClient.get()
                     .uri("/api/buses/internal/owner/" + ownerId)
                     .retrieve()
-                    .body(new ParameterizedTypeReference<List<Long>>() {});
+                    .body(new ParameterizedTypeReference<List<Long>>() {
+                    });
         } catch (Exception e) {
             log.error("Failed to fetch bus IDs for owner: {}", ownerId, e);
             return List.of();
@@ -89,7 +93,7 @@ public class BookingService {
         return finalBookings;
     }
 
-    public List<BookingSeats> fetchSeatByBookingId(BookingTicketResponseDTo booking){
+    public List<BookingSeats> fetchSeatByBookingId(BookingTicketResponseDTo booking) {
         return bookingSeatRepository.findSeatDetailsByBookingId(booking.getId());
     }
 
@@ -157,8 +161,8 @@ public class BookingService {
         bookingSeatRepository.updateSeatStatus(body.getSeatTicket(), SeatStatus.CANCELLED);
 
         List<BookingSeats> allSeats = bookingSeatRepository.findSeatDetailsByBookingId(bookingId);
-        boolean allCancelled = allSeats.stream().allMatch(seat -> 
-            body.getSeatTicket().contains(seat.getId()) || seat.getStatus() == SeatStatus.CANCELLED
+        boolean allCancelled = allSeats.stream().allMatch(seat ->
+                body.getSeatTicket().contains(seat.getId()) || seat.getStatus() == SeatStatus.CANCELLED
         );
         if (allCancelled) {
             booking.setStatus(BookingStatus.CANCELLED);
@@ -181,8 +185,16 @@ public class BookingService {
     @Setter
     @NoArgsConstructor
     private static class StationInternalDTO {
-        private Long stationId;
+        private Long id;
         private String stationName;
+
+        @Override
+        public String toString() {
+            return "StationInternalDTO{" +
+                    "id=" + id +
+                    ", stationName='" + stationName + '\'' +
+                    '}';
+        }
     }
 
     @Getter
@@ -192,6 +204,15 @@ public class BookingService {
         private Long busId;
         private String busName;
         private List<StationInternalDTO> stations;
+
+        @Override
+        public String toString() {
+            return "BusInternalDTO{" +
+                    "busName='" + busName + '\'' +
+                    ", busId='" + busId + '\'' +
+                    ", station data='" + stations.toString() + '\'' +
+                    '}';
+        }
     }
 
     private BusInternalDTO fetchBusDetailsInternal(Long busId) {
@@ -199,7 +220,8 @@ public class BookingService {
             ApiResponse<BusInternalDTO> response = restClient.get()
                     .uri("/api/buses/" + busId)
                     .retrieve()
-                    .body(new ParameterizedTypeReference<ApiResponse<BusInternalDTO>>() {});
+                    .body(new ParameterizedTypeReference<ApiResponse<BusInternalDTO>>() {
+                    });
             return response != null ? response.getData() : null;
         } catch (Exception e) {
             log.error("Failed to fetch details for bus ID: {}", busId, e);
@@ -233,10 +255,10 @@ public class BookingService {
             String distName = null;
             if (busDetails != null && busDetails.getStations() != null) {
                 for (StationInternalDTO st : busDetails.getStations()) {
-                    if (st.getStationId().equals(booking.getSourceStationId())) {
+                    if (st.getId().equals(booking.getSourceStationId())) {
                         srcName = st.getStationName();
                     }
-                    if (st.getStationId().equals(booking.getDestinationStationId())) {
+                    if (st.getId().equals(booking.getDestinationStationId())) {
                         distName = st.getStationName();
                     }
                 }
@@ -300,33 +322,35 @@ public class BookingService {
         return result;
     }
 
-    public List<FrontendBookingDTO> getBookingStatus(Long busId, LocalDateTime date) {
-        log.info("Fetching booking status for bus ID: {}, date: {}", busId, date);
-        List<Bookings> bookings = bookingRepository.findByBusIdAndDate(busId, date);
-        System.out.println("bookings#########" + bookings);
+    public List<FrontendBookingDTO> getBookingStatus(Long busId, LocalDateTime date, Integer pageNo) {
+        log.info("Fetching booking status for bus ID: {}, date: {}, page: {}", busId, date, pageNo);
+        org.springframework.data.domain.Pageable pageable = org.springframework.data.domain.PageRequest.of(pageNo - 1, 10);
+        org.springframework.data.domain.Page<Bookings> bookingsPage = bookingRepository.findByBusIdAndDate(busId, date, pageable);
+        List<Bookings> bookings = bookingsPage.getContent();
         List<FrontendBookingDTO> result = new ArrayList<>();
-        
+
         BusInternalDTO busDetails = fetchBusDetailsInternal(busId);
         String busName = busDetails != null ? busDetails.getBusName() : "Bus #" + busId;
 
         for (Bookings booking : bookings) {
             List<BookingSeats> seats = bookingSeatRepository.findSeatDetailsByBookingId(booking.getId());
-            
+
             String srcName = null;
             String distName = null;
             if (busDetails != null && busDetails.getStations() != null) {
                 for (StationInternalDTO st : busDetails.getStations()) {
-                    if (st.getStationId().equals(booking.getSourceStationId())) {
+                    if (st.getId().equals(booking.getSourceStationId())) {
                         srcName = st.getStationName();
                     }
-                    if (st.getStationId().equals(booking.getDestinationStationId())) {
+                    if (st.getId().equals(booking.getDestinationStationId())) {
                         distName = st.getStationName();
                     }
                 }
             }
-            
+
             result.add(new FrontendBookingDTO(booking, seats, busName, srcName, distName));
         }
+
         return result;
     }
 }
