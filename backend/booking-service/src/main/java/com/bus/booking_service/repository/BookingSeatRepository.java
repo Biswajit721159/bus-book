@@ -8,7 +8,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
-
 import java.time.LocalDate;
 import java.util.List;
 
@@ -32,15 +31,16 @@ public interface BookingSeatRepository extends JpaRepository<BookingSeats, Long>
     List<BookingSeats> findSeatDetailsByBookingId(@Param("bookingId") Long bookingId);
 
     List<BookingSeats> getByBookingIdAndCreatedBy(@Param("bookingId") Bookings id, @Param("createdBy") Long createdBy);
+
     List<BookingSeats> findAllByIdInAndCreatedBy(List<Long> ids, Long createdBy);
 
     @Modifying(clearAutomatically = true)
     @Transactional
     @Query("""
-        UPDATE BookingSeats bs
-        SET bs.status = :status
-        WHERE bs.id IN :ids
-    """)
+                UPDATE BookingSeats bs
+                SET bs.status = :status
+                WHERE bs.id IN :ids
+            """)
     int updateSeatStatus(@Param("ids") List<Long> ids,
                          @Param("status") SeatStatus status);
 }

@@ -2,7 +2,6 @@ package com.auth.users.repository;
 
 
 import com.auth.users.entities.MasterList;
-import com.auth.users.entities.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

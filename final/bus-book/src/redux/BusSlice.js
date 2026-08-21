@@ -13,9 +13,8 @@ export const loadStation = createAsyncThunk("busTable/loadStation", async () => 
 
 export const loadBus = createAsyncThunk("busTable/loadBus", async () => {
 	try {
-		const response = await fetch(`${api}/api/getFirstTenBus/`);
-		const data = await response.json();
-		return data.data;
+		const response = await axiosInstance.get(`/api/buses/top-rated`);
+		return response.data.data;
 	} catch (error) {
 		throw error;
 	}

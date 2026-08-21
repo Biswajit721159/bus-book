@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { toast } from "react-toastify";
 import { getBookingDetailsById, cancelTicket as cancelTicketApi } from "../../apis/booking";
 import { addWishList, removeWishList } from "../../apis/wishlist";
+import { getIsReview } from "../../apis/review";
 
 export const useViewTicket = (ticketId) => {
 	const [load, setLoad] = useState(false);
@@ -10,6 +11,8 @@ export const useViewTicket = (ticketId) => {
 	const [cancelModal, setCancelModal] = useState(false);
 	const [cancelLoading, setCancelLoading] = useState(false);
 	const [cancelTicketIds, setCancelTicketIds] = useState([]);
+	const [isReviewLoading, setIsReviewLoading] = useState(false);
+	const [reviewData, setReviewData] = useState(null);
 
 	const loadData = async () => {
 		try {
@@ -23,9 +26,22 @@ export const useViewTicket = (ticketId) => {
 		}
 	};
 
+	const getReview = async () => {
+		try {
+			setIsReviewLoading(true);
+			const res = await getIsReview(ticketId);
+			setReviewData(res.data);
+		} catch (error) {
+			toast.error(error?.message || "Failed to fetch ticket details");
+		} finally {
+			setIsReviewLoading(false);
+		}
+	};
+
 	useEffect(() => {
 		if (ticketId) {
 			loadData();
+			getReview();
 		}
 	}, [ticketId]);
 
@@ -98,8 +114,10 @@ export const useViewTicket = (ticketId) => {
 	};
 
 	return {
-		load,
+		load: isReviewLoading || load,
 		data,
+		reviewData,
+		setReviewData,
 		isFavouriteJourney: data?.isWishlisted,
 		favouriteJourneyLoader,
 		cancelModal,

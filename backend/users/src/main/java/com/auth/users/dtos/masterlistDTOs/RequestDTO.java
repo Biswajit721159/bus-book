@@ -1,4 +1,4 @@
-package com.auth.users.dtos.masterlist;
+package com.auth.users.dtos.masterlistDTOs;
 
 import jakarta.persistence.Column;
 import jakarta.validation.constraints.NotBlank;

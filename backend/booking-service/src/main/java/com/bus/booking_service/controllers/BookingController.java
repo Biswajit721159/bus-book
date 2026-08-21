@@ -1,8 +1,9 @@
 package com.bus.booking_service.controllers;
-import com.bus.booking_service.dtos.BookingTicketResponseDTo;
+import com.bus.booking_service.dtos.bookings.BookingTicketResponseDTo;
 import com.bus.booking_service.dtos.guestTicketResponseDTO;
 import com.bus.booking_service.dtos.cancelTicketDTO;
 import com.bus.booking_service.dtos.common.ApiResponse;
+import com.bus.booking_service.entities.Bookings;
 import com.bus.booking_service.entities.User;
 import com.bus.booking_service.services.BookingService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,7 +11,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
-
 import com.bus.booking_service.dtos.BookingQueryDTO;
 import com.bus.booking_service.dtos.BookingStatusRequestDTO;
 import com.bus.booking_service.dtos.FrontendBookingDTO;
@@ -82,5 +82,11 @@ public class BookingController {
     public ResponseEntity<ApiResponse<Map<String, Object>>> confirmBooking(@RequestBody BookingConfirmRequestDTO body) {
         Map<String, Object> result = seatLockService.confirmBooking(body);
         return ResponseEntity.ok(ApiResponse.success("Booking confirmed successfully", result, HttpStatus.OK.value()));
+    }
+
+    @GetMapping("/internal/{bookingId}")
+    public ResponseEntity<ApiResponse<Object>> getBookingById(@PathVariable Long bookingId) {
+        Bookings booking = bookingService.findById(bookingId);
+        return ResponseEntity.ok(ApiResponse.success("Booking successfully fetched", booking, HttpStatus.OK.value()));
     }
 }

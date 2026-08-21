@@ -13,7 +13,7 @@ import AddBus from "../pages/Buses/AddBus";
 import EditBus from "../pages/Buses/EditBus";
 import ViewBus from "../pages/Buses/ViewBus";
 import Bookings from "../pages/Bookings";
-import Drivers from "../pages/Drivers";
+// import Drivers from "../pages/Drivers";
 import RoutesPage from "../pages/Routes";
 import Settings from "../pages/Settings";
 
@@ -133,14 +133,14 @@ export const AppRoutes: React.FC = () => {
 			/>
 
 			{/* Private Drivers & Route Visualizers */}
-			<Route
+			{/* <Route
 				path="/Drivers"
 				element={
 					<PrivateRoute>
 						<Drivers />
 					</PrivateRoute>
 				}
-			/>
+			/> */}
 			<Route
 				path="/Routes"
 				element={

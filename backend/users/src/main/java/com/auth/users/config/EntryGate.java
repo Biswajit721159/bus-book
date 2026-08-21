@@ -59,7 +59,8 @@ public class EntryGate {
                                 "/v3/api-docs/**",
                                 "/swagger-ui/**",
                                 "/swagger-ui.html",
-                                "/messages"
+                                "/messages",
+                                "/api/master-list/internal/**"
                         ).permitAll()
                         // All other endpoints require authentication (including /api/auth/users)
                         .anyRequest().authenticated()

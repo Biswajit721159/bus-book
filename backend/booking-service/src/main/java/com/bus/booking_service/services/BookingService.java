@@ -1,12 +1,14 @@
 package com.bus.booking_service.services;
-
-import com.bus.booking_service.dtos.BookingTicketResponseDTo;
+import com.bus.booking_service.dtos.bookings.BookingTicketResponseDTo;
+import com.bus.booking_service.dtos.bus.NormalUserBusResponseDto;
 import com.bus.booking_service.dtos.guestTicketResponseDTO;
 import com.bus.booking_service.dtos.cancelTicketDTO;
-import com.bus.booking_service.entities.BookingSeats;
-import com.bus.booking_service.entities.Bookings;
-import com.bus.booking_service.entities.Wishlist;
-import com.bus.booking_service.entities.User;
+import com.bus.booking_service.dtos.internal.BusInternalDTO;
+import com.bus.booking_service.dtos.internal.StationInternalDTO;
+import com.bus.booking_service.internals.busApi;
+import com.bus.booking_service.internals.userApi;
+import com.bus.booking_service.dtos.masterList.masterListResponseDTO;
+import com.bus.booking_service.entities.*;
 import com.bus.booking_service.enums.BookingStatus;
 import com.bus.booking_service.enums.SeatStatus;
 import com.bus.booking_service.exceptions.BadRequestException;
@@ -16,54 +18,41 @@ import com.bus.booking_service.repository.BookingSeatRepository;
 import com.bus.booking_service.repository.WishlistRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
 import com.bus.booking_service.enums.Role;
 import com.bus.booking_service.exceptions.ResourceNotFoundException;
-import org.springframework.web.client.RestClient;
-import org.springframework.core.ParameterizedTypeReference;
 import lombok.extern.slf4j.Slf4j;
-
+import org.springframework.transaction.annotation.Transactional;
 import com.bus.booking_service.dtos.BookingQueryDTO;
 import com.bus.booking_service.dtos.FrontendBookingDTO;
-import com.bus.booking_service.dtos.common.ApiResponse;
 
-import java.util.Map;
-import java.util.HashMap;
-import java.util.ArrayList;
-import java.util.Arrays;
-
-import lombok.Getter;
-import lombok.Setter;
-import lombok.NoArgsConstructor;
-
+import java.util.*;
 import java.time.LocalDateTime;
-import java.util.List;
 
 @Slf4j
 @Service
 public class BookingService {
     @Autowired
-    BookingRepository bookingRepository;
-    @Autowired
-    BookingSeatRepository bookingSeatRepository;
-    @Autowired
-    WishlistService wishlistService;
-    @Autowired
-    WishlistRepository wishlistRepository;
+    private  BookingRepository bookingRepository;
 
-    private final RestClient restClient = RestClient.builder().baseUrl("http://localhost:8005").build();
+    @Autowired
+    private  BookingSeatRepository bookingSeatRepository;
 
-    private List<Long> getBusIdsByOwner(Long ownerId) {
-        try {
-            return restClient.get()
-                    .uri("/api/buses/internal/owner/" + ownerId)
-                    .retrieve()
-                    .body(new ParameterizedTypeReference<List<Long>>() {
-                    });
-        } catch (Exception e) {
-            log.error("Failed to fetch bus IDs for owner: {}", ownerId, e);
-            return List.of();
-        }
+    @Autowired
+    private  WishlistRepository wishlistRepository;;
+
+    @Autowired
+    private busApi busApi;
+
+    @Autowired
+    private userApi userApi;
+
+    @Autowired
+    private WishlistService wishlistService;
+
+    public Bookings findById(Long bookingId) {
+        return bookingRepository
+                .findById(bookingId)
+                .orElseThrow(() -> new ResourceNotFoundException("Booking not found with id: " + bookingId));
     }
 
     public List<BookingTicketResponseDTo> fetchBookingData(User user) {
@@ -72,7 +61,7 @@ public class BookingService {
         if (user.getRole() == Role.SUPER_ADMIN) {
             bookingsData = bookingRepository.findAllByOrderByCreatedAtDesc();
         } else if (user.getRole() == Role.BUS_OWNER) {
-            List<Long> busIds = getBusIdsByOwner(user.getId());
+            List<Long> busIds = busApi.getBusIdsByOwner(user.getId());
             if (busIds.isEmpty()) {
                 bookingsData = List.of();
             } else {
@@ -82,13 +71,20 @@ public class BookingService {
             bookingsData = bookingRepository.findByCreatedByOrderByCreatedAtDesc(user.getId());
         }
 
-        List<BookingTicketResponseDTo> finalBookings = bookingsData.stream()
-                .map(BookingTicketResponseDTo::new)
-                .toList();
-        for (BookingTicketResponseDTo booking : finalBookings) {
-            List<BookingSeats> seats = fetchSeatByBookingId(booking);
-            booking.setPassengerSeatMap(seats);
+        List<BookingTicketResponseDTo> finalBookings = new ArrayList<>();
+        for (Bookings booking : bookingsData) {
+            NormalUserBusResponseDto bus = busApi.getBusById(booking.getBusId());
+
+            BookingTicketResponseDTo bookingTicketResponse = new BookingTicketResponseDTo(booking, bus);
+            List<BookingSeats> bookingSeats = bookingSeatRepository.findSeatDetailsByBookingId(booking.getId());
+
+            List<Long> masterListUserIds = bookingSeats.stream().map(BookingSeats::getPassengerId).toList();
+            List<masterListResponseDTO> masterList = userApi.fetchMasterListUsers(masterListUserIds);
+
+            bookingTicketResponse.setPassengerSeatMap(bookingSeats, masterList);
+            finalBookings.add(bookingTicketResponse);
         }
+
         wishlistService.updateWishListForAll(bookingsData, finalBookings, user);
         return finalBookings;
     }
@@ -100,12 +96,13 @@ public class BookingService {
     public BookingTicketResponseDTo fetchSeatByBookingId(Long id, User user) {
         Bookings booking = bookingRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Booking not found"));
+        List<BookingSeats> Seats = bookingSeatRepository.findSeatDetailsByBookingId(booking.getId());
+
+        NormalUserBusResponseDto bus = busApi.getBusById(booking.getBusId());
 
         // Authorization check
-        if (user.getRole() == Role.SUPER_ADMIN) {
-            // Allowed
-        } else if (user.getRole() == Role.BUS_OWNER) {
-            List<Long> busIds = getBusIdsByOwner(user.getId());
+        if (user.getRole() == Role.BUS_OWNER) {
+            List<Long> busIds = busApi.getBusIdsByOwner(user.getId());
             if (!busIds.contains(booking.getBusId())) {
                 throw new UnauthorizedException("Unauthorized: You do not own this bus");
             }
@@ -115,16 +112,24 @@ public class BookingService {
             }
         }
 
+        List<Long> masterListUserIds = Seats.stream().map(BookingSeats::getPassengerId).toList();
+        List<masterListResponseDTO> masterList = userApi.fetchMasterListUsers(masterListUserIds);
+
         List<BookingSeats> bookingSeats = bookingSeatRepository.findSeatDetailsByBookingId(booking.getId());
-        BookingTicketResponseDTo bookingTicketResponse = new BookingTicketResponseDTo(booking);
-        bookingTicketResponse.setPassengerSeatMap(bookingSeats);
+
+        BookingTicketResponseDTo bookingTicketResponse = new BookingTicketResponseDTo(booking, bus);
+        bookingTicketResponse.setPassengerSeatMap(bookingSeats, masterList);
+
         Wishlist wishlist = wishlistRepository.findByBookingAndUser(booking, user.getId());
+
         if (wishlist != null) {
             bookingTicketResponse.updateWishListedStatus(true);
         }
+
         return bookingTicketResponse;
     }
 
+    @Transactional
     public BookingTicketResponseDTo updateCancelTicket(cancelTicketDTO body, User user) {
         List<BookingSeats> bookingSeats = bookingSeatRepository.findAllById(body.getSeatTicket());
         if (bookingSeats.isEmpty() || body.getSeatTicket().size() != bookingSeats.size()) {
@@ -136,7 +141,7 @@ public class BookingService {
             if (user.getRole() == Role.SUPER_ADMIN) {
                 // Allowed
             } else if (user.getRole() == Role.BUS_OWNER) {
-                List<Long> busIds = getBusIdsByOwner(user.getId());
+                List<Long> busIds = busApi.getBusIdsByOwner(user.getId());
                 if (!busIds.contains(seat.getBookingId().getBusId())) {
                     throw new UnauthorizedException("Unauthorized: You do not own the bus for one of these seats");
                 }
@@ -181,61 +186,13 @@ public class BookingService {
         return guestTicketResponse;
     }
 
-    @Getter
-    @Setter
-    @NoArgsConstructor
-    private static class StationInternalDTO {
-        private Long id;
-        private String stationName;
-
-        @Override
-        public String toString() {
-            return "StationInternalDTO{" +
-                    "id=" + id +
-                    ", stationName='" + stationName + '\'' +
-                    '}';
-        }
-    }
-
-    @Getter
-    @Setter
-    @NoArgsConstructor
-    private static class BusInternalDTO {
-        private Long busId;
-        private String busName;
-        private List<StationInternalDTO> stations;
-
-        @Override
-        public String toString() {
-            return "BusInternalDTO{" +
-                    "busName='" + busName + '\'' +
-                    ", busId='" + busId + '\'' +
-                    ", station data='" + stations.toString() + '\'' +
-                    '}';
-        }
-    }
-
-    private BusInternalDTO fetchBusDetailsInternal(Long busId) {
-        try {
-            ApiResponse<BusInternalDTO> response = restClient.get()
-                    .uri("/api/buses/" + busId)
-                    .retrieve()
-                    .body(new ParameterizedTypeReference<ApiResponse<BusInternalDTO>>() {
-                    });
-            return response != null ? response.getData() : null;
-        } catch (Exception e) {
-            log.error("Failed to fetch details for bus ID: {}", busId, e);
-            return null;
-        }
-    }
-
     public Map<String, Object> fetchBookingsPagination(BookingQueryDTO query, User user) {
         log.info("Fetching paginated bookings for user: {}, role: {}, query: {}", user.getEmail(), user.getRole(), query);
         List<Bookings> bookingsData;
         if (user.getRole() == Role.SUPER_ADMIN) {
             bookingsData = bookingRepository.findAllByOrderByCreatedAtDesc();
         } else if (user.getRole() == Role.BUS_OWNER) {
-            List<Long> busIds = getBusIdsByOwner(user.getId());
+            List<Long> busIds = busApi.getBusIdsByOwner(user.getId());
             if (busIds.isEmpty()) {
                 bookingsData = List.of();
             } else {
@@ -248,7 +205,7 @@ public class BookingService {
         List<FrontendBookingDTO> filteredBookings = new ArrayList<>();
         for (Bookings booking : bookingsData) {
             List<BookingSeats> seats = bookingSeatRepository.findSeatDetailsByBookingId(booking.getId());
-            BusInternalDTO busDetails = fetchBusDetailsInternal(booking.getBusId());
+            BusInternalDTO busDetails = busApi.fetchBusDetailsInternal(booking.getBusId());
             String busName = busDetails != null ? busDetails.getBusName() : "Bus #" + booking.getBusId();
 
             String srcName = null;
@@ -329,7 +286,7 @@ public class BookingService {
         List<Bookings> bookings = bookingsPage.getContent();
         List<FrontendBookingDTO> result = new ArrayList<>();
 
-        BusInternalDTO busDetails = fetchBusDetailsInternal(busId);
+        BusInternalDTO busDetails = busApi.fetchBusDetailsInternal(busId);
         String busName = busDetails != null ? busDetails.getBusName() : "Bus #" + busId;
 
         for (Bookings booking : bookings) {

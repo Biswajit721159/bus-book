@@ -22,6 +22,8 @@ interface UseAdminBookingsReturn {
   closePassengerModal: () => void;
   findBookings: (e: React.FormEvent) => Promise<void>;
   selectOptions: { value: string; label: string }[];
+  currentPage: number;
+  fetchBookingsForPage: (page: number) => Promise<void>;
 }
 
 export const useAdminBookings = (): UseAdminBookingsReturn => {
@@ -36,6 +38,7 @@ export const useAdminBookings = (): UseAdminBookingsReturn => {
     open: false,
     data: null,
   });
+  const [currentPage, setCurrentPage] = useState(1);
 
   const loadBuses = async () => {
     try {
@@ -68,8 +71,7 @@ export const useAdminBookings = (): UseAdminBookingsReturn => {
     setPassengerModal({ open: false, data: null });
   };
 
-  const findBookings = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const fetchBookingsForPage = async (page: number) => {
     if (!selectedBus) {
       toast.warn('Please select a bus.');
       return;
@@ -85,10 +87,11 @@ export const useAdminBookings = (): UseAdminBookingsReturn => {
     }
     try {
       setIsLoading(true);
-      const res = await bookingApi.getByStatus(date, busId);
+      const res = await bookingApi.getByStatus(date, busId, page);
       if (res.data) {
         setBookings(res.data);
         setFilteredBookings(res.data);
+        setCurrentPage(page);
       } else {
         setBookings([]);
         setFilteredBookings([]);
@@ -98,6 +101,11 @@ export const useAdminBookings = (): UseAdminBookingsReturn => {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const findBookings = async (e: React.FormEvent) => {
+    e.preventDefault();
+    await fetchBookingsForPage(1);
   };
 
   const selectOptions = busData.map((b) => ({ value: b.bus_name, label: b.bus_name }));
@@ -117,6 +125,8 @@ export const useAdminBookings = (): UseAdminBookingsReturn => {
     closePassengerModal,
     findBookings,
     selectOptions,
+    currentPage,
+    fetchBookingsForPage,
   };
 };
 export default useAdminBookings;

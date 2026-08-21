@@ -112,8 +112,8 @@ export interface BookingQuery {
 }
 
 export const bookingApi = {
-  getByStatus: async (date: string, busId: string): Promise<ApiResponse<Booking[]>> =>
-    request<ApiResponse<Booking[]>>(API_ENDPOINTS.BOOKING.STATUS, {
+  getByStatus: async (date: string, busId: string, pageNo: string | number = 1): Promise<ApiResponse<Booking[]>> =>
+    request<ApiResponse<Booking[]>>(API_ENDPOINTS.BOOKING.STATUS(String(pageNo)), {
       method: 'PATCH',
       body: { date, bus_id: Number(busId) },
     }),

@@ -1,5 +1,4 @@
 package com.booking.bus.controllers;
-
 import com.booking.bus.dtos.bus.*;
 import com.booking.bus.dtos.common.ApiResponse;
 import com.booking.bus.entities.User;
@@ -13,7 +12,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
-
 import java.util.List;
 import java.util.Map;
 

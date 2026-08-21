@@ -1,6 +1,6 @@
 package com.bus.booking_service.services;
 
-import com.bus.booking_service.dtos.BookingTicketResponseDTo;
+import com.bus.booking_service.dtos.bookings.BookingTicketResponseDTo;
 import com.bus.booking_service.entities.Bookings;
 import com.bus.booking_service.entities.Wishlist;
 import com.bus.booking_service.entities.User;

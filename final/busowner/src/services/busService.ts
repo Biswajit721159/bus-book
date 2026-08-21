@@ -16,5 +16,5 @@ export const addBus = (busName: string, seat: string | number, stationData: Stat
 export const editBus = (busData: Partial<Bus>) => busApi.update(busData);
 export const findBusByFilter = (page: number, approved = false, pending = true, rejected = false) =>
   busApi.filter(page, approved, pending, rejected);
-export const getBookingStatus = (date: string, busId: string) =>
-  bookingApi.getByStatus(date, busId);
+export const getBookingStatus = (date: string, busId: string, pageNo: string | number = 1) =>
+  bookingApi.getByStatus(date, busId, pageNo);

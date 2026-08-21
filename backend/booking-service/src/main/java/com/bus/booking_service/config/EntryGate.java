@@ -50,7 +50,7 @@ public class EntryGate {
                                 "/swagger-ui/**",
                                 "/swagger-ui.html",
                                 "/messages",
-                                "/api/booking/confirm"
+                                "/api/booking/**"
                         ).permitAll()
                         // All other endpoints require authentication (including /api/auth/users)
                         .anyRequest().authenticated()

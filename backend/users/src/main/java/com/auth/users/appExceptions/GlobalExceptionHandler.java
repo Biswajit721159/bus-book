@@ -1,4 +1,4 @@
-package com.auth.users.exceptions;
+package com.auth.users.appExceptions;
 
 import com.auth.users.dtos.common.ApiResponse;
 import lombok.extern.slf4j.Slf4j;

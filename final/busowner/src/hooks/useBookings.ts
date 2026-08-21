@@ -22,8 +22,8 @@ export const useBookings = () => {
   const setBusNameFilter = (name: string) => dispatch(addBusName(name));
   const setPage = (page: number) => dispatch(setCurrentPage(page));
 
-  const fetchBookingStatus = async (date: string, busId: string) =>
-    bookingApi.getByStatus(date, busId);
+  const fetchBookingStatus = async (date: string, busId: string, pageNo: string | number = 1) =>
+    bookingApi.getByStatus(date, busId, pageNo);
 
   const fetchSuperAdminBookings = async (page: number) =>
     bookingApi.paginate({ currentPage: page });

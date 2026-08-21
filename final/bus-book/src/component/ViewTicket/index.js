@@ -5,12 +5,15 @@ import { useViewTicket } from "./useViewTicket";
 import JourneySummary from "./JourneySummary";
 import PassengerTable from "./PassengerTable";
 import CancelConfirmModal from "./CancelConfirmModal";
+import ReviewJourney from "./ReviewJourney";
 
 const ViewTicket = () => {
 	const { _id } = useParams();
 	const {
 		load,
 		data,
+		reviewData,
+		setReviewData,
 		isFavouriteJourney,
 		favouriteJourneyLoader,
 		cancelModal,
@@ -35,8 +38,10 @@ const ViewTicket = () => {
 					<div>
 						<h1 className="text-2xl font-bold text-surface-900">Ticket Details</h1>
 					</div>
+
 					<div className="flex items-center gap-3">
 						{/* Favourite button */}
+						<ReviewJourney reviewData={reviewData} bookingId={_id} setReviewData={setReviewData} />
 						<button
 							onClick={isFavouriteJourney ? removeFromFavouriteJourney : addToFavouriteJourney}
 							disabled={favouriteJourneyLoader}

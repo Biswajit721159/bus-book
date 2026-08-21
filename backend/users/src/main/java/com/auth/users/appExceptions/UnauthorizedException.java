@@ -1,4 +1,4 @@
-package com.auth.users.exceptions;
+package com.auth.users.appExceptions;
 
 public class UnauthorizedException extends RuntimeException {
     public UnauthorizedException(String message) {
