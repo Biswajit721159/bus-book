@@ -148,6 +148,7 @@ public class GatewayController {
                 responseSpec = requestSpec.retrieve();
             }
 
+
             ResponseEntity<byte[]> entity = responseSpec.toEntity(byte[].class);
             HttpHeaders cleanHeaders = new HttpHeaders();
             entity.getHeaders().forEach((name, values) -> {

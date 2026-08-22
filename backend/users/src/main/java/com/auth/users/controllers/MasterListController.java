@@ -16,12 +16,14 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/master-list")
 @Tag(name = "This end point is for add, edit, delete from master list")
+@Tag(name = "This end point is for add, edit, delete from master list")
 public class MasterListController {
 
     @Autowired
     private MasterListService masterListService;
 
     @GetMapping("")
+    public ResponseEntity<ApiResponse<List<ResponseDTO>>> getUser(Authentication authentication) {
     public ResponseEntity<ApiResponse<List<ResponseDTO>>> getUser(Authentication authentication) {
         User currentUser = (User) authentication.getPrincipal();
         List<ResponseDTO> responseList = masterListService.getMasterList(currentUser);
@@ -30,7 +32,9 @@ public class MasterListController {
 
     @PostMapping("")
     public ResponseEntity<ApiResponse<ResponseDTO>> addUser(@Valid @RequestBody RequestDTO body, Authentication authentication) {
+    public ResponseEntity<ApiResponse<ResponseDTO>> addUser(@Valid @RequestBody RequestDTO body, Authentication authentication) {
         User currentUser = (User) authentication.getPrincipal();
+        System.out.println(authentication);
         System.out.println(authentication);
         ResponseDTO newRecord = masterListService.addMasterListRecord(body, currentUser);
         return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success("User added to master list successfully", newRecord, HttpStatus.CREATED.value()));
