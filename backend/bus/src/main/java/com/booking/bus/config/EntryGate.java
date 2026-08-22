@@ -50,10 +50,12 @@ public class EntryGate {
                                 "/v3/api-docs/**",
                                 "/swagger-ui/**",
                                 "/swagger-ui.html",
-                                "/messages"
+                                "/messages",
+                                "/api/review",
+                                "/api/review/**"
                         ).permitAll()
                         // All other endpoints require authentication (including /api/auth/users)
-                        .anyRequest().authenticated()
+//                        .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .addFilterBefore(authFilter, UsernamePasswordAuthenticationFilter.class);

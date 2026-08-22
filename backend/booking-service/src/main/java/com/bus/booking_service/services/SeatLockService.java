@@ -24,9 +24,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestClient;
 import com.bus.booking_service.dtos.BookingConfirmRequestDTO;
+import com.bus.booking_service.dtos.masterList.masterListResponseDTO;
 import com.bus.booking_service.enums.BookingStatus;
+import com.bus.booking_service.internals.userApi;
 import org.springframework.kafka.core.KafkaTemplate;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.web.util.HtmlUtils;
 
 import java.time.LocalDateTime;
 import java.util.*;
@@ -54,6 +57,9 @@ public class SeatLockService {
     @Autowired
     private ObjectMapper objectMapper;
 
+    @Autowired
+    private userApi userApi;
+
     private final RestClient restClient = RestClient.builder().baseUrl("http://localhost:8005").build();
 
     @Data
@@ -75,11 +81,8 @@ public class SeatLockService {
 
     private BusDetailsDTO fetchBusDetails(Long busId) {
         try {
-            ApiResponse<BusDetailsDTO> response = restClient.get()
-                    .uri("/api/buses/" + busId)
-                    .retrieve()
-                    .body(new ParameterizedTypeReference<ApiResponse<BusDetailsDTO>>() {
-                    });
+            ApiResponse<BusDetailsDTO> response = restClient.get().uri("/api/buses/" + busId).retrieve().body(new ParameterizedTypeReference<ApiResponse<BusDetailsDTO>>() {
+            });
             return response != null ? response.getData() : null;
         } catch (Exception e) {
             log.error("Failed to fetch details for bus ID: {}", busId, e);
@@ -214,22 +217,35 @@ public class SeatLockService {
         }
 
         // 2. Finalize the booking
-        SeatLocks firstLock = activeLocks.get(0);
+        SeatLocks firstLock = activeLocks.getFirst();
 
-        Bookings booking = Bookings.builder().createdBy(dto.getUserId()).busId(dto.getBusId()).sourceStationId(firstLock.getSourceStationId()).destinationStationId(firstLock.getDestinationStationId()).bookingDate(firstLock.getBookingDate()).totalAmount(dto.getTotalAmount()).paymentId(dto.getPaymentId()).status(BookingStatus.CONFIRMED).isActive(true).build();
+        Bookings booking = Bookings.builder()
+                .createdBy(dto.getUserId())
+                .busId(dto.getBusId())
+                .sourceStationId(firstLock.getSourceStationId())
+                .destinationStationId(firstLock.getDestinationStationId())
+                .bookingDate(firstLock.getBookingDate())
+                .totalAmount(dto.getTotalAmount())
+                .paymentId(dto.getPaymentId())
+                .status(BookingStatus.CONFIRMED)
+                .isActive(true)
+                .build();
 
         bookingRepository.save(booking);
 
         List<BookingSeats> savedSeats = new ArrayList<>();
-        StringBuilder seatsHtmlBuilder = new StringBuilder("<ul>");
         for (SeatLocks lock : activeLocks) {
-            BookingSeats seat = BookingSeats.builder().createdBy(dto.getUserId()).bookingId(booking).passengerId(lock.getPassengerId()).seatNumber(lock.getSeatNumber()).status(SeatStatus.CONFIRMED).build();
+            BookingSeats seat = BookingSeats.builder()
+                    .createdBy(dto.getUserId())
+                    .bookingId(booking)
+                    .passengerId(lock.getPassengerId())
+                    .seatNumber(lock.getSeatNumber())
+                    .status(SeatStatus.CONFIRMED)
+                    .build();
 
             bookingSeatRepository.save(seat);
             savedSeats.add(seat);
-            seatsHtmlBuilder.append("<li>Seat ").append(lock.getSeatNumber()).append("</li>");
         }
-        seatsHtmlBuilder.append("</ul>");
 
         // 3. Delete locks
         seatLockRepository.deleteLocksByUserId(dto.getUserId());
@@ -264,7 +280,7 @@ public class SeatLockService {
             emailEvent.put("destination", destName);
             emailEvent.put("journeyDate", firstLock.getBookingDate().toLocalDate().toString());
             emailEvent.put("amount", dto.getTotalAmount().toString());
-            emailEvent.put("passengerSeatsHtml", seatsHtmlBuilder.toString());
+            emailEvent.put("passengerSeatsHtml", buildPassengerSeatsHtml(savedSeats));
 
             String emailJson = objectMapper.writeValueAsString(emailEvent);
             kafkaTemplate.send("booking-email-topic", emailJson);
@@ -277,5 +293,35 @@ public class SeatLockService {
         response.put("success", true);
         response.put("bookingId", booking.getId());
         return response;
+    }
+
+    String buildPassengerSeatsHtml(List<BookingSeats> seats) {
+        Map<Long, String> passengerNames = new HashMap<>();
+        List<Long> passengerIds = seats.stream()
+                .map(BookingSeats::getPassengerId)
+                .filter(Objects::nonNull)
+                .distinct()
+                .toList();
+
+        if (!passengerIds.isEmpty()) {
+            try {
+                for (masterListResponseDTO passenger : userApi.fetchMasterListUsers(passengerIds)) {
+                    passengerNames.put(passenger.getId(), passenger.getName());
+                }
+            } catch (Exception e) {
+                log.warn("Could not resolve master-list passenger details for booking email", e);
+            }
+        }
+
+        return seats.stream()
+                .map(seat -> {
+                    String name = passengerNames.getOrDefault(
+                            seat.getPassengerId(),
+                            "Passenger #" + seat.getPassengerId()
+                    );
+                    return "<tr><td>" + HtmlUtils.htmlEscape(name)
+                            + "</td><td>" + seat.getSeatNumber() + "</td></tr>";
+                })
+                .collect(Collectors.joining());
     }
 }

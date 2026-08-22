@@ -1,18 +1,16 @@
 package com.auth.users.services;
-
-import com.auth.users.dtos.masterlist.RequestDTO;
-import com.auth.users.dtos.masterlist.ResponseDTO;
+import com.auth.users.dtos.masterlistDTOs.RequestDTO;
+import com.auth.users.dtos.masterlistDTOs.ResponseDTO;
 import com.auth.users.entities.MasterList;
 import com.auth.users.entities.User;
-import com.auth.users.exceptions.ConflictException;
-import com.auth.users.exceptions.ResourceNotFoundException;
-import com.auth.users.exceptions.UnauthorizedException;
+import com.auth.users.appExceptions.ConflictException;
+import com.auth.users.appExceptions.ResourceNotFoundException;
+import com.auth.users.appExceptions.UnauthorizedException;
 import com.auth.users.repository.MasterListRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 import java.util.List;
 
 @Slf4j
@@ -74,5 +72,9 @@ public class MasterListService {
 
         existingRecord.setActive(false);
         masterListRepository.save(existingRecord);
+    }
+
+    public List<ResponseDTO> getMasterListByIds(List<Long> ids) {
+        return masterListRepository.findAllById(ids).stream().map(ResponseDTO::new).toList();
     }
 }
