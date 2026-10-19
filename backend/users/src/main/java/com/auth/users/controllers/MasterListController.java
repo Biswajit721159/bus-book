@@ -44,7 +44,6 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/master-list")
 @Tag(name = "This end point is for add, edit, delete from master list")
-@Tag(name = "This end point is for add, edit, delete from master list")
 @RequiredArgsConstructor
 public class MasterListController {
 
@@ -64,8 +63,6 @@ public class MasterListController {
      * Use: Retrieves the list of saved co-passengers for the authenticated user.
      */
     @GetMapping("")
-    public ResponseEntity<ApiResponse<List<ResponseDTO>>> getUser(Authentication authentication) {
-
     public ResponseEntity<ApiResponse<List<ResponseDTO>>> getUser(Authentication authentication) {
         User currentUser = getAuthenticatedUser(authentication);
         List<ResponseDTO> responseList = masterListService.getMasterList(currentUser);
