@@ -1,0 +1,64 @@
+# ==============================================================================
+# Git Ignore - Bus Booking Platform
+# ==============================================================================
+
+# Environment files & Secrets
+.env
+.env.*
+*.env
+*.local
+**/.env
+**/.env.*
+application-local.properties
+**/application-local.properties
+application-*.local.properties
+**/application-*.local.properties
+
+# Allow environment template
+!.env.example
+!**/.env.example
+
+# macOS & OS files
+.DS_Store
+.AppleDouble
+.LSOverride
+Thumbs.db
+
+# IDE & Editor files
+.idea/
+*.iml
+*.iws
+*.ipr
+.vscode/
+*.swp
+*.swo
+*~
+
+# Maven & Build targets
+target/
+**/target/
+build/
+**/build/
+dist/
+**/dist/
+.mvn/timing.properties
+.mvn/wrapper/maven-wrapper.jar
+
+# Node & Frontend dependencies
+node_modules/
+**/node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# Logs
+logs/
+**/logs/
+*.log
+
+# Docker & Temporary Data
+.docker/
+tmp/
+**/tmp/
+.agent

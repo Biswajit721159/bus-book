@@ -43,16 +43,19 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSubmit, isLoading, onGoo
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, []);
 
-  console.log("errors", errors);
-
 	return (
-		<form onSubmit={handleSubmit(onSubmit)} className="space-y-5 animate-fade-in" noValidate>
+		<form onSubmit={handleSubmit(onSubmit)} className="space-y-4 animate-fade-in" noValidate>
 			<InputField
 				id="login-email"
 				type="email"
-				label="Email address"
-				placeholder="you@example.com"
+				label="Email Address"
+				placeholder="operator@company.com"
 				autoComplete="email"
+				icon={
+					<svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+						<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.206" />
+					</svg>
+				}
 				error={errors.email?.message}
 				{...register("email")}
 			/>
@@ -61,8 +64,13 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSubmit, isLoading, onGoo
 				id="login-password"
 				type={showPassword ? "text" : "password"}
 				label="Password"
-				placeholder="Enter your password"
+				placeholder="Enter your account password"
 				autoComplete="current-password"
+				icon={
+					<svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+						<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+					</svg>
+				}
 				error={errors.password?.message}
 				rightElement={
 					<PasswordToggle show={showPassword} onToggle={() => setShowPassword((p) => !p)} />
@@ -70,32 +78,34 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSubmit, isLoading, onGoo
 				{...register("password")}
 			/>
 
-			<div className="flex items-center justify-between">
+			<div className="flex items-center justify-between pt-1">
 				<label className="flex items-center gap-2 cursor-pointer select-none">
 					<input
 						type="checkbox"
-						className="w-4 h-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+						className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
 						{...register("rememberMe")}
 					/>
-					<span className="text-sm text-slate-600">Remember me</span>
+					<span className="text-xs font-semibold text-slate-600">Remember me</span>
 				</label>
 				<Link
 					to="/ForgotPassword"
-					className="text-sm text-indigo-600 hover:text-indigo-700 font-medium transition-colors"
+					className="text-xs font-bold text-blue-600 hover:text-blue-700 transition-colors"
 				>
 					Forgot password?
 				</Link>
 			</div>
 
-			<SubmitButton isLoading={isLoading} label="Sign In" loadingLabel="Signing in..." />
+			<SubmitButton isLoading={isLoading} label="Sign In to Dashboard" loadingLabel="Verifying credentials..." />
 
-			{/* Google divider */}
-			<div className="relative mt-4">
+			{/* Google Sign-In divider */}
+			<div className="relative my-4">
 				<div className="absolute inset-0 flex items-center">
 					<div className="w-full border-t border-slate-200" />
 				</div>
-				<div className="relative flex justify-center text-sm">
-					<span className="px-3 bg-white/80 text-slate-500 rounded-full">Or continue with</span>
+				<div className="relative flex justify-center text-xs">
+					<span className="px-3 bg-white text-slate-400 font-bold uppercase tracking-wider">
+						Or continue with
+					</span>
 				</div>
 			</div>
 

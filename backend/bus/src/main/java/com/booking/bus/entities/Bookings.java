@@ -3,18 +3,12 @@ package com.booking.bus.entities;
 import com.booking.bus.enums.Booking.BookingStatus;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
-import lombok.*;
-
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import lombok.*;
 
 @Entity
-@Table(name = "bookings", indexes = {
-        @Index(
-                name = "idx_booking_search",
-                columnList = "bus_id, booking_date, status"
-        )
-})
+@Table(name = "bookings", indexes = {@Index(name = "idx_booking_search", columnList = "bus_id, booking_date, status")})
 @Getter
 @Setter
 @NoArgsConstructor

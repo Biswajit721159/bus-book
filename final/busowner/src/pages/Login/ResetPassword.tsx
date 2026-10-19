@@ -44,7 +44,7 @@ export const ResetPassword: React.FC = () => {
   const handleVerifyOtp = async (otp: string) => {
     const { password } = getValues();
     if (!password) {
-      toast.warn('Enter your new password first');
+      toast.warn('Please enter your new password first');
       return;
     }
     try {
@@ -75,21 +75,26 @@ export const ResetPassword: React.FC = () => {
 
   return (
     <AuthCard
-      title="Reset Password"
+      title="Create New Password"
       subtitle={
-        <>
-          Enter your new password and the OTP sent to{' '}
-          <span className="font-semibold text-slate-800">{email}</span>
-        </>
+        <span>
+          Enter your new password and the verification code sent to{' '}
+          <strong className="text-slate-900 font-semibold">{email}</strong>
+        </span>
       }
     >
-      <form className="space-y-5" noValidate>
+      <form className="space-y-4 mb-6 animate-fade-in" noValidate>
         <InputField
           id="new-password"
           type={showPassword ? 'text' : 'password'}
           label="New Password"
           placeholder="Min. 8 characters"
           autoComplete="new-password"
+          icon={
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+            </svg>
+          }
           error={errors.password?.message}
           rightElement={
             <PasswordToggle show={showPassword} onToggle={() => setShowPassword((p) => !p)} />
@@ -97,13 +102,13 @@ export const ResetPassword: React.FC = () => {
           {...register('password')}
         />
 
-        <p className="text-xs text-slate-500 bg-slate-50 p-2.5 rounded-lg border border-slate-100">
-          Password must be 8–20 characters with uppercase, lowercase, digit, and special character
-          (@$!%*?&#).
-        </p>
+        <div className="p-3 bg-blue-50/60 rounded-xl border border-blue-100 text-[11px] text-slate-600">
+          <span className="font-bold text-blue-900 block">Security Requirement:</span>
+          <p>Password must be 8–20 characters with uppercase, lowercase, digit, and special character.</p>
+        </div>
       </form>
 
-      <div className="mt-5">
+      <div>
         <OtpForm
           onVerify={handleVerifyOtp}
           onResend={handleResendOtp}
@@ -113,12 +118,12 @@ export const ResetPassword: React.FC = () => {
         />
       </div>
 
-      <div className="mt-6 text-center">
+      <div className="mt-8 pt-6 border-t border-slate-100 text-center">
         <Link
           to="/Login"
-          className="text-sm font-semibold text-slate-500 hover:text-slate-800 transition-colors"
+          className="text-xs font-bold text-slate-500 hover:text-slate-800 transition-colors inline-flex items-center gap-1.5"
         >
-          ← Back to Login
+          <span>← Back to Operator Sign In</span>
         </Link>
       </div>
     </AuthCard>

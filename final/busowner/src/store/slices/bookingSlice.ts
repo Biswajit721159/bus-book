@@ -10,6 +10,9 @@ const initialState: BookingQuery = {
   BookingDate: '',
   BusName: '',
   currentPage: 1,
+  pnr: '',
+  bookingId: '',
+  search: '',
 };
 
 const bookingSlice = createSlice({
@@ -31,8 +34,28 @@ const bookingSlice = createSlice({
     addBusName: (state, action: PayloadAction<string>) => {
       state.BusName = action.payload;
     },
+    addPnr: (state, action: PayloadAction<string>) => {
+      state.pnr = action.payload;
+    },
+    addBookingId: (state, action: PayloadAction<string>) => {
+      state.bookingId = action.payload;
+    },
+    addSearch: (state, action: PayloadAction<string>) => {
+      state.search = action.payload;
+    },
     setCurrentPage: (state, action: PayloadAction<number>) => {
       state.currentPage = action.payload;
+    },
+    resetBookingFilters: (state) => {
+      state.Email = '';
+      state.Src = '';
+      state.Dist = '';
+      state.BookingDate = '';
+      state.BusName = '';
+      state.pnr = '';
+      state.bookingId = '';
+      state.search = '';
+      state.currentPage = 1;
     },
   },
 });
@@ -61,12 +84,33 @@ export const bookingApiSlice = createApi({
       query: (data) => ({
         url: 'booking/pagination',
         method: 'POST',
-        body: data,
+        body: {
+          currentPage: data.currentPage || 1,
+          email: data.email || data.Email || undefined,
+          src: data.src || data.Src || undefined,
+          dist: data.dist || data.Dist || undefined,
+          bookingDate: data.bookingDate || data.BookingDate || undefined,
+          busName: data.busName || data.BusName || undefined,
+          pnr: data.pnr || undefined,
+          bookingId: data.bookingId || undefined,
+          search: data.search || undefined,
+        },
       }),
     }),
   }),
 });
 
 export const { useGetBookingsQuery } = bookingApiSlice;
-export const { addEmail, addSrc, addDist, addBookingDate, addBusName, setCurrentPage } = bookingSlice.actions;
+export const {
+  addEmail,
+  addSrc,
+  addDist,
+  addBookingDate,
+  addBusName,
+  addPnr,
+  addBookingId,
+  addSearch,
+  setCurrentPage,
+  resetBookingFilters,
+} = bookingSlice.actions;
 export default bookingSlice.reducer;

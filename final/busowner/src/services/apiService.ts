@@ -14,17 +14,20 @@ export interface ApiResponse<T> {
 // ─── Field Mappers ─────────────────────────────────────────────────────────────
 
 export const mapBackendToBus = (raw: any): Bus => ({
-  _id: String(raw.id),
-  bus_name: raw.busName,
-  Total_seat: raw.totalSeat,
-  status: raw.status ? (raw.status.toLowerCase() as Bus['status']) : 'pending',
+  _id: String(raw.id ?? raw.busId ?? ''),
+  bus_name: raw.busName || raw.bus_name || '',
+  Total_seat: Number(raw.totalSeat ?? raw.Total_seat ?? 0),
+  status: (raw.status ? String(raw.status).toLowerCase() : 'pending') as Bus['status'],
   email: raw.email || '',
   createdAt: raw.createdAt || '',
   updatedAt: raw.updatedAt || '',
-  station_data: (raw.stations || []).map((st: any) => ({
-    station: st.stationName,
-    arrived_time: st.arrivalTime,
-    Distance_from_Previous_Station: st.distanceFromLastStation,
+  active: raw.active ?? true,
+  averageRating: raw.averageRating ?? null,
+  totalReviewsCount: raw.totalReviewsCount ?? 0,
+  station_data: (raw.stations || raw.station_data || []).map((st: any) => ({
+    station: st.stationName ?? st.station ?? '',
+    arrived_time: st.arrivalTime ?? st.arrived_time ?? '',
+    Distance_from_Previous_Station: Number(st.distanceFromLastStation ?? st.Distance_from_Previous_Station ?? 0),
   })),
 });
 
@@ -38,7 +41,7 @@ const mapBusToBackend = (
   stations: stationData.map((st) => ({
     stationName: st.station,
     arrivalTime: st.arrived_time,
-    distanceFromLastStation: st.Distance_from_Previous_Station,
+    distanceFromLastStation: Number(st.Distance_from_Previous_Station || 0),
   })),
 });
 
@@ -59,13 +62,15 @@ export const busApi = {
     approved = false,
     pending = true,
     rejected = false
-  ): Promise<{ totalPage: number; result: Bus[] }> => {
-    const res = await request<ApiResponse<{ totalPage: number; result: any[] }>>(
+  ): Promise<{ totalPage: number; totalElements: number; currentPage: number; result: Bus[] }> => {
+    const res = await request<ApiResponse<{ totalPage: number; totalElements?: number; currentPage?: number; result: any[] }>>(
       API_ENDPOINTS.BUS.FILTER,
       { method: 'POST', body: { page, approved, pending, rejected } }
     );
     return {
       totalPage: res.data?.totalPage || 1,
+      totalElements: res.data?.totalElements || 0,
+      currentPage: res.data?.currentPage || page,
       result: (res.data?.result || []).map(mapBackendToBus),
     };
   },
@@ -88,15 +93,25 @@ export const busApi = {
   },
 
   update: async (busData: Partial<Bus>): Promise<ApiResponse<Bus>> => {
+    const busId = busData._id;
+    if (!busId || busId === 'undefined') {
+      throw new Error('Invalid bus ID for update');
+    }
     const body = {
       ...mapBusToBackend(busData.bus_name || '', busData.Total_seat || 0, busData.station_data || []),
       status: busData.status,
     };
-    const res = await request<ApiResponse<any>>(API_ENDPOINTS.BUS.UPDATE(busData._id!), {
+    const res = await request<ApiResponse<any>>(API_ENDPOINTS.BUS.UPDATE(busId), {
       method: 'PUT',
       body,
     });
     return { ...res, data: mapBackendToBus(res.data) };
+  },
+
+  delete: async (id: string): Promise<ApiResponse<null>> => {
+    return request<ApiResponse<null>>(API_ENDPOINTS.BUS.DELETE(id), {
+      method: 'DELETE',
+    });
   },
 };
 

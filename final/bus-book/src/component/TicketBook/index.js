@@ -159,6 +159,7 @@ const TicketBook = () => {
 							seatarr={seatarr}
 							Mark={Mark}
 							onContinue={() => setModalOpen(true)}
+							totalDistance={totalDistance}
 						/>
 					</div>
 

@@ -1,25 +1,19 @@
 package com.bus.booking_service.dtos.bus;
 
-import com.bus.booking_service.entities.Bus;
+import java.util.List;
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import java.util.List;
 
 @Data
 @NoArgsConstructor
+@AllArgsConstructor
 public class NormalUserBusResponseDto {
     private Long busId;
     private String busName;
     private int totalSeat;
+    private Double averageRating;
+    private Long totalReviewsCount;
+    private Long totalRatingSum;
     private List<StationResponseDTO> stations;
-
-    public NormalUserBusResponseDto(Bus bus) {
-        this.busId = bus.getId();
-        this.busName = bus.getBusName();
-        this.totalSeat = bus.getTotalSeat();
-        this.stations = bus.getStations()
-                .stream()
-                .map(StationResponseDTO::new)
-                .toList();
-    }
 }

@@ -1,8 +1,7 @@
 package com.bus.booking_service.dtos.internal;
 
-import lombok.Data;
-
 import java.util.List;
+import lombok.Data;
 
 @Data
 public class BusInternalDTO {
@@ -12,10 +11,7 @@ public class BusInternalDTO {
 
     @Override
     public String toString() {
-        return "BusInternalDTO{" +
-                "busName='" + busName + '\'' +
-                ", busId='" + busId + '\'' +
-                ", station data='" + stations.toString() + '\'' +
-                '}';
+        return "BusInternalDTO{" + "busName='" + busName + '\'' + ", busId='" + busId + '\'' + ", station data='" + stations.toString() +
+                '\'' + '}';
     }
 }

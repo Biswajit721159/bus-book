@@ -2,9 +2,8 @@ package com.bus.payment.dtos;
 
 import jakarta.persistence.Column;
 import jakarta.validation.constraints.*;
-import lombok.Data;
-
 import java.math.BigDecimal;
+import lombok.Data;
 
 @Data
 public class PaymentRequestBodyDTO {
@@ -24,7 +23,6 @@ public class PaymentRequestBodyDTO {
     @NotBlank(message = "CVV is required")
     @Pattern(regexp = "^[0-9]{3,4}$", message = "CVV must be 3 or 4 digits")
     private String cardCvv;
-
 
     @NotNull(message = "Total amount is required")
     @DecimalMin(value = "0.01", message = "Total amount must be greater than 0")

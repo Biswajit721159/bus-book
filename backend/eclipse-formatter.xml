@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<profiles version="21">
+<profile kind="CodeFormatterProfile" name="EnterpriseWide" version="21">
+    <!-- Line Length Limit: Wide 140 characters so one line contains more code -->
+    <setting id="org.eclipse.jdt.core.formatter.lineSplit" value="140"/>
+    <setting id="org.eclipse.jdt.core.formatter.tabulation.char" value="space"/>
+    <setting id="org.eclipse.jdt.core.formatter.tabulation.size" value="4"/>
+    <setting id="org.eclipse.jdt.core.formatter.indentation.size" value="4"/>
+
+    <!-- Alignment policies: 16 = WRAP_NO (Do NOT wrap unless line limit is exceeded) -->
+    <setting id="org.eclipse.jdt.core.formatter.alignment_for_selector_in_method_invocation" value="16"/>
+    <setting id="org.eclipse.jdt.core.formatter.alignment_for_arguments_in_method_invocation" value="16"/>
+    <setting id="org.eclipse.jdt.core.formatter.alignment_for_parameters_in_method_declaration" value="16"/>
+    <setting id="org.eclipse.jdt.core.formatter.alignment_for_conditional_expression" value="16"/>
+    <setting id="org.eclipse.jdt.core.formatter.alignment_for_binary_expression" value="16"/>
+    <setting id="org.eclipse.jdt.core.formatter.alignment_for_throws_clause_in_method_declaration" value="16"/>
+    <setting id="org.eclipse.jdt.core.formatter.alignment_for_resources_in_try" value="16"/>
+    <setting id="org.eclipse.jdt.core.formatter.alignment_for_expressions_in_array_initializer" value="16"/>
+    <setting id="org.eclipse.jdt.core.formatter.alignment_for_enum_constants" value="16"/>
+    <setting id="org.eclipse.jdt.core.formatter.alignment_for_superinterfaces_in_type_declaration" value="16"/>
+    <setting id="org.eclipse.jdt.core.formatter.alignment_for_superclass_in_type_declaration" value="16"/>
+
+    <!-- Wrapping options: Avoid splitting code across lines unnecessarily -->
+    <setting id="org.eclipse.jdt.core.formatter.wrap_before_or_operator_multicatch" value="false"/>
+    <setting id="org.eclipse.jdt.core.formatter.wrap_before_binary_operator" value="false"/>
+    <setting id="org.eclipse.jdt.core.formatter.wrap_outer_expressions_when_nested" value="false"/>
+    <setting id="org.eclipse.jdt.core.formatter.continuation_indentation" value="2"/>
+    <setting id="org.eclipse.jdt.core.formatter.continuation_indentation_for_array_initializer" value="2"/>
+
+    <!-- Keep clean brace placement -->
+    <setting id="org.eclipse.jdt.core.formatter.brace_position_for_type_declaration" value="end_of_line"/>
+    <setting id="org.eclipse.jdt.core.formatter.brace_position_for_method_declaration" value="end_of_line"/>
+    <setting id="org.eclipse.jdt.core.formatter.brace_position_for_block" value="end_of_line"/>
+    <setting id="org.eclipse.jdt.core.formatter.brace_position_for_constructor_declaration" value="end_of_line"/>
+    <setting id="org.eclipse.jdt.core.formatter.brace_position_for_lambda_body" value="end_of_line"/>
+
+    <!-- Do not wrap comments aggressively -->
+    <setting id="org.eclipse.jdt.core.formatter.comment.line_length" value="140"/>
+    <setting id="org.eclipse.jdt.core.formatter.comment.format_line_comments" value="false"/>
+    <setting id="org.eclipse.jdt.core.formatter.comment.format_block_comments" value="false"/>
+    <setting id="org.eclipse.jdt.core.formatter.comment.format_javadoc_comments" value="true"/>
+    <setting id="org.eclipse.jdt.core.formatter.comment.indent_parameter_description" value="true"/>
+</profile>
+</profiles>

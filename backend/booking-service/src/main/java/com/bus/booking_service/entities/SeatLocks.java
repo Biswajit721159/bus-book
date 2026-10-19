@@ -1,17 +1,12 @@
 package com.bus.booking_service.entities;
 
 import jakarta.persistence.*;
+import java.time.LocalDateTime;
 import lombok.*;
 
-import java.time.LocalDateTime;
-
 @Entity
-@Table(name = "seat_locks", uniqueConstraints = {
-        @UniqueConstraint(
-                name = "uq_seat_lock",
-                columnNames = {"bus_id", "booking_date", "seat_number"}
-        )
-})
+@Table(name = "seat_locks", uniqueConstraints = {@UniqueConstraint(name = "uq_seat_lock", columnNames = {"bus_id", "booking_date",
+        "seat_number"})})
 @Getter
 @Setter
 @NoArgsConstructor

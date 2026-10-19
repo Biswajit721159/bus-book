@@ -1,20 +1,20 @@
 package com.bus.booking_service.dtos;
 
-import com.bus.booking_service.entities.Bookings;
 import com.bus.booking_service.entities.BookingSeats;
+import com.bus.booking_service.entities.Bookings;
 import com.bus.booking_service.enums.SeatStatus;
-import lombok.Data;
-
 import java.math.BigDecimal;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import lombok.Data;
 
 @Data
 public class FrontendBookingDTO {
     private String _id;
+    private String pnr_number;
     private String useremail;
     private String bus_id;
     private Map<String, String> bus;
@@ -31,15 +31,16 @@ public class FrontendBookingDTO {
 
     public FrontendBookingDTO(Bookings booking, List<BookingSeats> seats, String busName, String srcName, String distName) {
         this._id = String.valueOf(booking.getId());
+        this.pnr_number = booking.getPnrNumber();
         this.useremail = "user" + booking.getCreatedBy() + "@example.com";
         this.bus_id = String.valueOf(booking.getBusId());
-        
+
         this.bus = new HashMap<>();
         this.bus.put("bus_name", busName != null ? busName : "Bus #" + booking.getBusId());
-        
+
         this.src = srcName != null ? srcName : "Station #" + booking.getSourceStationId();
         this.dist = distName != null ? distName : "Station #" + booking.getDestinationStationId();
-        
+
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss");
         this.date = booking.getBookingDate().format(formatter);
         this.total_money = booking.getTotalAmount();

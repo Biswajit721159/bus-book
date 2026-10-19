@@ -2,12 +2,11 @@ package com.bus.booking_service.repository;
 
 import com.bus.booking_service.entities.Bookings;
 import com.bus.booking_service.entities.Wishlist;
+import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
-
-import java.util.List;
 
 @Repository
 public interface WishlistRepository extends JpaRepository<Wishlist, Long> {

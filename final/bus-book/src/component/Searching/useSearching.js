@@ -1,18 +1,28 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { useLocation, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
-import { loadBus, fetchBusData } from "../../redux/BusSlice";
+import { loadBus, fetchBusData, loadStation } from "../../redux/BusSlice";
 import { BusSearchmethod } from "../../redux/BusSearchSlice";
 
 export const useSearching = () => {
 	const dispatch = useDispatch();
+	const location = useLocation();
+	const navigate = useNavigate();
+
 	const src = useSelector((s) => s.BusSearch.src);
 	const dist = useSelector((s) => s.BusSearch.dist);
 	const date = useSelector((s) => s.BusSearch.date);
-	const { station } = useSelector((s) => s.Bus);
+	const { station, loadingStation, stationLoaded } = useSelector((s) => s.Bus);
 
 	const [disabled, setDisabled] = useState(false);
 	const [errors, setErrors] = useState({ src: "", dist: "", date: "" });
+
+	useEffect(() => {
+		if (!stationLoaded && !loadingStation) {
+			dispatch(loadStation());
+		}
+	}, [dispatch, stationLoaded, loadingStation]);
 
 	const validate = () => {
 		const e = { src: "", dist: "", date: "" };
@@ -42,6 +52,9 @@ export const useSearching = () => {
 		setDisabled(true);
 		dispatch(fetchBusData({ source: src, dist }));
 		setDisabled(false);
+		if (location.pathname !== "/book-bus") {
+			navigate("/book-bus");
+		}
 	};
 
 	const clearSearch = () => {

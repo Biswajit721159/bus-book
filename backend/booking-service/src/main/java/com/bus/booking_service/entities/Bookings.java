@@ -1,21 +1,14 @@
 package com.bus.booking_service.entities;
 
 import com.bus.booking_service.enums.BookingStatus;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
-import lombok.*;
-
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import lombok.*;
 
 @Entity
-@Table(name = "bookings", indexes = {
-        @Index(
-                name = "idx_booking_search",
-                columnList = "bus_id, booking_date, status"
-        )
-})
+@Table(name = "bookings", indexes = {@Index(name = "idx_booking_search", columnList = "bus_id, booking_date, status")})
 @Getter
 @Setter
 @NoArgsConstructor
@@ -44,6 +37,10 @@ public class Bookings {
     @Column(name = "payment_id")
     private Long paymentId;
 
+    @OneToMany(mappedBy = "bookingId", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @Builder.Default
+    private java.util.List<BookingSeats> seats = new java.util.ArrayList<>();
+
     // ================= BOOKING DATA =================
 
     @Column(name = "booking_date", nullable = false)
@@ -51,6 +48,9 @@ public class Bookings {
 
     @Column(name = "total_amount", precision = 10, scale = 2, nullable = false)
     private BigDecimal totalAmount;
+
+    @Column(name = "pnr_number", unique = true, nullable = false, length = 16)
+    private String pnrNumber;
 
     @Builder.Default
     @Enumerated(EnumType.STRING)

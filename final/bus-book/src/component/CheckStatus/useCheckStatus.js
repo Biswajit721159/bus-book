@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { toast } from "react-toastify";
-import { getGuestBookingDetails } from "../../apis/booking";
+import { getGuestBookingDetails, getBookingDetailsByPnr } from "../../apis/booking";
 
 const api = process.env.REACT_APP_API;
 
@@ -29,22 +29,39 @@ export const useCheckStatus = () => {
 	};
 
 	const submit = async () => {
-		if (!idNumber.trim()) {
-			toast.warn("Please enter a valid booking ID");
+		const query = idNumber.trim();
+		if (!query) {
+			toast.warn("Please enter a valid PNR number or booking ID");
 			return;
 		}
 		setLoading(true);
 		try {
-			const res = await getGuestBookingDetails(idNumber);
+			let res;
+			if (/^\d{7}$/.test(query)) {
+				// 7-digit PNR format
+				try {
+					res = await getBookingDetailsByPnr(query);
+				} catch (pnrErr) {
+					// Fallback to numeric ID search if not found by PNR
+					res = await getGuestBookingDetails(query);
+				}
+			} else {
+				try {
+					res = await getGuestBookingDetails(query);
+				} catch (idErr) {
+					res = await getBookingDetailsByPnr(query);
+				}
+			}
 			setData(res.data);
 			toast.success("Ticket found!");
-			addToHistory(idNumber);
+			addToHistory(query);
 		} catch (error) {
 			toast.error(error?.message || "Failed to fetch ticket details");
 		} finally {
 			setLoading(false);
 		}
 	};
+
 
 	return {
 		idNumber,

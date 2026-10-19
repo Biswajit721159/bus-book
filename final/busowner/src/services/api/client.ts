@@ -30,6 +30,26 @@ axiosInstance.interceptors.request.use(
   }
 );
 
+// Response interceptor to handle 401 Unauthorized and 403 Forbidden globally
+axiosInstance.interceptors.response.use(
+  (response) => {
+    return response;
+  },
+  (error) => {
+    if (error.response && (error.response.status === 401 || error.response.status === 403)) {
+      // Clear expired user session from localStorage
+      localStorage.removeItem('user');
+
+      // Redirect to Login page if not already there
+      const currentPath = window.location.pathname.toLowerCase();
+      if (currentPath !== '/login' && currentPath !== '/register' && currentPath !== '/forgotpassword' && currentPath !== '/') {
+        window.location.href = '/Login';
+      }
+    }
+    return Promise.reject(error);
+  }
+);
+
 interface RequestOptions {
   method?: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'OPTIONS' | 'PATCH';
   body?: any;

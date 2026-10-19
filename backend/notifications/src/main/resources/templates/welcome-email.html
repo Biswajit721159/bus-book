@@ -1,150 +1,93 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Welcome to BusBooking</title>
-    <style>
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background-color: #f3f4f6;
-            margin: 0;
-            padding: 0;
-            -webkit-font-smoothing: antialiased;
-        }
-        .container {
-            max-width: 600px;
-            margin: 40px auto;
-            background: #ffffff;
-            border-radius: 16px;
-            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
-            overflow: hidden;
-            border: 1px solid #e5e7eb;
-        }
-        .header {
-            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
-            padding: 40px 20px;
-            text-align: center;
-            color: #ffffff;
-        }
-        .header h1 {
-            margin: 0;
-            font-size: 28px;
-            font-weight: 700;
-            letter-spacing: -0.025em;
-        }
-        .header p {
-            margin: 10px 0 0 0;
-            font-size: 16px;
-            opacity: 0.9;
-        }
-        .content {
-            padding: 40px 30px;
-            color: #1f2937;
-            line-height: 1.6;
-        }
-        .content h2 {
-            font-size: 20px;
-            font-weight: 600;
-            margin-top: 0;
-            color: #111827;
-        }
-        .content p {
-            font-size: 15px;
-            color: #4b5563;
-            margin-bottom: 24px;
-        }
-        .card {
-            background-color: #f9fafb;
-            border: 1px solid #f3f4f6;
-            border-radius: 12px;
-            padding: 20px;
-            margin-bottom: 30px;
-        }
-        .card-row {
-            margin-bottom: 12px;
-        }
-        .card-row:last-child {
-            margin-bottom: 0;
-        }
-        .card-label {
-            font-weight: 500;
-            color: #6b7280;
-            font-size: 13px;
-            display: block;
-            margin-bottom: 4px;
-        }
-        .card-value {
-            font-weight: 600;
-            color: #111827;
-            font-size: 15px;
-        }
-        .btn-container {
-            text-align: center;
-            margin: 30px 0 10px 0;
-        }
-        .btn {
-            display: inline-block;
-            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
-            color: #ffffff !important;
-            text-decoration: none;
-            padding: 14px 32px;
-            border-radius: 9999px;
-            font-weight: 600;
-            font-size: 15px;
-            box-shadow: 0 4px 14px 0 rgba(79, 70, 229, 0.3);
-        }
-        .footer {
-            background-color: #f9fafb;
-            padding: 24px;
-            text-align: center;
-            font-size: 13px;
-            color: #9ca3af;
-            border-top: 1px solid #e5e7eb;
-        }
-        .footer a {
-            color: #4f46e5;
-            text-decoration: none;
-            font-weight: 500;
-        }
-        .icon {
-            font-size: 40px;
-            margin-bottom: 10px;
-        }
-    </style>
+    <title>Welcome to BlueBus</title>
 </head>
-<body>
-    <div class="container">
-        <div class="header">
-            <div class="icon">🚌</div>
-            <h1>Welcome to BusBooking!</h1>
-            <p>Your journey begins here</p>
-        </div>
-        <div class="content">
-            <h2>Hi {{name}},</h2>
-            <p>Thank you for registering with us! We are thrilled to welcome you to the BusBooking family. Our platform is designed to make your travel planning smooth, fast, and completely hassle-free.</p>
-            
-            <div class="card">
-                <div class="card-row">
-                    <span class="card-label">Email Address</span>
-                    <span class="card-value">{{email}}</span>
-                </div>
-                <div class="card-row">
-                    <span class="card-label">Account Status</span>
-                    <span class="card-value" style="color: #10b981;">Active</span>
-                </div>
-            </div>
+<body style="margin: 0; padding: 0; background-color: #f1f5f9; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; -webkit-font-smoothing: antialiased;">
+    <table width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #f1f5f9; padding: 30px 10px;">
+        <tr>
+            <td align="center">
+                <table width="600" border="0" cellspacing="0" cellpadding="0" style="max-width: 600px; width: 100%; background-color: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.08); border: 1px solid #e2e8f0;">
+                    
+                    <!-- Header -->
+                    <tr>
+                        <td style="background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 50%, #4f46e5 100%); padding: 38px 30px; text-align: center;">
+                            <div style="display: inline-block; background-color: rgba(255, 255, 255, 0.18); border-radius: 9999px; padding: 6px 16px; margin-bottom: 12px;">
+                                <span style="color: #ffffff; font-size: 12px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase;">Welcome Aboard</span>
+                            </div>
+                            <div style="color: #ffffff; font-size: 26px; font-weight: 800; letter-spacing: -0.5px;">
+                                Welcome to BlueBus!
+                            </div>
+                            <div style="color: #bfdbfe; font-size: 14px; margin-top: 4px;">
+                                Your reliable partner for comfortable bus travel
+                            </div>
+                        </td>
+                    </tr>
 
-            <p>To get started, click the button below to log in and explore available bus routes, seat options, and ongoing travel deals.</p>
+                    <!-- Body -->
+                    <tr>
+                        <td style="padding: 34px 30px;">
+                            <p style="margin: 0 0 10px 0; font-size: 18px; font-weight: 700; color: #0f172a;">
+                                Hi {{name}},
+                            </p>
+                            <p style="margin: 0 0 24px 0; font-size: 14px; color: #475569; line-height: 1.6;">
+                                Thank you for creating an account with BlueBus! Your registration is complete, and your travel profile is now active.
+                            </p>
 
-            <div class="btn-container">
-                <a href="http://localhost:8080/api/auth/login" class="btn">Explore Available Routes</a>
-            </div>
-        </div>
-        <div class="footer">
-            <p>&copy; 2026 BusBooking Inc. All rights reserved.</p>
-            <p>Need support? Contact us at <a href="mailto:support@busbooking.com">support@busbooking.com</a></p>
-        </div>
-    </div>
+                            <!-- Account Details Card -->
+                            <table width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 12px 20px; margin-bottom: 28px;">
+                                <tr>
+                                    <td style="padding: 10px 0; border-bottom: 1px dashed #cbd5e1; font-size: 13px; color: #64748b; font-weight: 500;">
+                                        Registered Email
+                                    </td>
+                                    <td align="right" style="padding: 10px 0; border-bottom: 1px dashed #cbd5e1; font-size: 14px; color: #0f172a; font-weight: 700;">
+                                        {{email}}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 10px 0; font-size: 13px; color: #64748b; font-weight: 500;">
+                                        Account Status
+                                    </td>
+                                    <td align="right" style="padding: 10px 0; font-size: 13px; color: #16a34a; font-weight: 700;">
+                                        &#10003; Active & Verified
+                                    </td>
+                                </tr>
+                            </table>
+
+                            <p style="margin: 0 0 28px 0; font-size: 14px; color: #475569; line-height: 1.6;">
+                                You can now search thousands of routes, pick your favorite seats, and enjoy transparent pricing with zero convenience surprises.
+                            </p>
+
+                            <!-- CTA Button -->
+                            <table width="100%" border="0" cellspacing="0" cellpadding="0">
+                                <tr>
+                                    <td align="center">
+                                        <a href="http://localhost:3000/book-bus" style="display: inline-block; background-color: #2563eb; color: #ffffff; text-decoration: none; padding: 13px 32px; border-radius: 10px; font-size: 14px; font-weight: 700; letter-spacing: 0.3px;">
+                                            Book Your First Bus &rarr;
+                                        </a>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+
+                    <!-- Footer -->
+                    <tr>
+                        <td style="background-color: #f8fafc; border-top: 1px solid #e2e8f0; padding: 22px 30px; text-align: center;">
+                            <p style="margin: 0 0 4px 0; font-size: 12px; color: #64748b;">
+                                &copy; 2026 BlueBus Technologies Inc. All rights reserved.
+                            </p>
+                            <p style="margin: 0; font-size: 12px; color: #94a3b8;">
+                                Questions? Write to <a href="mailto:support@bluebus.com" style="color: #2563eb; text-decoration: none; font-weight: 600;">support@bluebus.com</a>
+                            </p>
+                        </td>
+                    </tr>
+
+                </table>
+            </td>
+        </tr>
+    </table>
 </body>
 </html>

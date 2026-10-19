@@ -1,8 +1,8 @@
-import { useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { useSelector } from 'react-redux';
-import { RootState } from '../../../store';
+import { RootState, invalidateBusCache } from '../../../store';
 import { busApi } from '../../../services/apiService';
 import { ROLES } from '../../../utils/constants';
 import type { Bus, StationData } from '../../../types/bus';
@@ -22,11 +22,35 @@ interface UseEditBusReturn {
 export const useEditBus = (): UseEditBusReturn => {
   const location = useLocation();
   const navigate = useNavigate();
+  const { _id: urlId } = useParams<{ _id: string }>();
   const [data, setData] = useState<Partial<Bus>>(location.state?.data || {});
   const [isLoading, setIsLoading] = useState(false);
 
   const otherUserinfo = useSelector((state: RootState) => state.userAuth.otherUserinfo);
   const isSuperAdmin = otherUserinfo?.role === ROLES.SUPER_ADMIN;
+
+  useEffect(() => {
+    if ((!data._id || !data.bus_name) && urlId) {
+      const fetchBus = async () => {
+        try {
+          setIsLoading(true);
+          const res = await busApi.getById(urlId);
+          if (res?.data) {
+            setData(res.data);
+          } else {
+            toast.warn('Bus not found');
+            navigate('/Dashboard');
+          }
+        } catch (e: any) {
+          toast.warn(e.message || 'Failed to load bus details');
+          navigate('/Dashboard');
+        } finally {
+          setIsLoading(false);
+        }
+      };
+      fetchBus();
+    }
+  }, [urlId, data._id, data.bus_name, navigate]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -41,7 +65,12 @@ export const useEditBus = (): UseEditBusReturn => {
       i === index
         ? {
             ...s,
-            [name]: name === 'Distance_from_Previous_Station' ? parseInt(value) || 0 : value.toUpperCase(),
+            [name]:
+              name === 'Distance_from_Previous_Station'
+                ? (value === '' ? 0 : Number(value))
+                : name === 'arrived_time'
+                ? value
+                : value.toUpperCase(),
           }
         : s
     );
@@ -70,7 +99,8 @@ export const useEditBus = (): UseEditBusReturn => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!data._id) {
+    const effectiveId = data._id || urlId;
+    if (!effectiveId) {
       toast.warn('Invalid bus ID.');
       return;
     }
@@ -84,9 +114,10 @@ export const useEditBus = (): UseEditBusReturn => {
     }
     try {
       setIsLoading(true);
-      const res = await busApi.update(data);
+      const res = await busApi.update({ ...data, _id: effectiveId });
       if (res.statusCode === 200) {
         toast.success(res.message || 'Bus updated successfully');
+        invalidateBusCache();
         navigate(-1);
       } else {
         toast.warn(res.message || 'Failed to update bus');
@@ -110,4 +141,5 @@ export const useEditBus = (): UseEditBusReturn => {
     updateStatus,
   };
 };
+
 export default useEditBus;

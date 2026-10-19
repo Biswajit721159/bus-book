@@ -1,21 +1,26 @@
 package com.booking.bus.entities;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.Size;
-import lombok.*;
 import java.time.LocalDateTime;
+import lombok.*;
 
 @Entity
-@Table(name = "customer_review", uniqueConstraints = {
-        @UniqueConstraint(name = "uk_customer_rating_user_booking", columnNames = {"created_by", "booking_id"})
-})
+@Table(name = "customer_review", indexes = {@Index(name = "idx_review_bus_id", columnList = "bus_id, id"),
+        @Index(name = "idx_review_processed_id", columnList = "is_processed, id"),
+        @Index(name = "idx_review_booking_id", columnList = "booking_id")}, uniqueConstraints = {
+                @UniqueConstraint(name = "uk_customer_rating_user_booking", columnNames = {"created_by", "booking_id"})})
 @Getter
 @Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class CustomerReview {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -24,9 +29,13 @@ public class CustomerReview {
     // ================= RELATION =================
 
     @Column(name = "created_by", nullable = false)
+    @JsonProperty("user")
+    @JsonAlias({"user", "userId", "created_by", "createdBy"})
     private Long user;
 
     @Column(name = "booking_id", nullable = false)
+    @JsonProperty("bookingId")
+    @JsonAlias({"bookingId", "booking_id"})
     private Long bookingId;
 
     // ================= BASIC INFO =================
@@ -40,6 +49,17 @@ public class CustomerReview {
     @Size(min = 5, max = 500)
     private String message;
 
+    @Column(name = "bus_id", nullable = false)
+    @JsonProperty("busId")
+    @JsonAlias({"busId", "bus_id"})
+    private Long busId;
+
+    @Column(name = "is_processed", nullable = false)
+    @Builder.Default
+    @JsonProperty("isProcessed")
+    @JsonAlias({"processed", "isProcessed", "is_processed"})
+    private boolean isProcessed = false;
+
     // ================= TIMESTAMPS =================
 
     @Column(name = "created_at", nullable = false, updatable = false)
@@ -51,13 +71,13 @@ public class CustomerReview {
     // ================= AUTO TIMESTAMP =================
 
     @PrePersist
-    public void OnCreate() {
+    public void onCreate() {
         this.createdAt = LocalDateTime.now();
         this.updatedAt = LocalDateTime.now();
     }
 
     @PreUpdate
-    public void OnUpdate() {
+    public void onUpdate() {
         this.updatedAt = LocalDateTime.now();
     }
 }

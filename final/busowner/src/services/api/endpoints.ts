@@ -30,6 +30,7 @@ export const API_ENDPOINTS = {
 		FILTER: "buses/filter",
 		CREATE: "buses",
 		UPDATE: (id: string) => `buses/${id}`,
+		DELETE: (id: string) => `buses/${id}`,
 	},
 
 	// ─── Bookings ─────────────────────────────────────────────────────────

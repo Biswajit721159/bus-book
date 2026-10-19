@@ -1,25 +1,21 @@
 package com.bus.booking_service.dtos.bus;
 
-import com.bus.booking_service.entities.Station;
+import com.fasterxml.jackson.annotation.JsonFormat;
+import java.time.LocalTime;
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalTime;
-
 @Data
 @NoArgsConstructor
+@AllArgsConstructor
 public class StationResponseDTO {
     private Long id;
     private String stationName;
+
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "HH:mm[:ss]")
     private LocalTime arrivalTime;
+
     private int distanceFromLastStation;
     private int stationOrder;
-
-    public StationResponseDTO(Station station) {
-        this.id = station.getId();
-        this.stationName = station.getStationName();
-        this.arrivalTime = station.getArrivalTime();
-        this.distanceFromLastStation = station.getDistanceFromLastStation();
-        this.stationOrder = station.getStationOrder();
-    }
 }

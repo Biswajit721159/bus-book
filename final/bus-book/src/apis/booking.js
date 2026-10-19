@@ -1,9 +1,9 @@
 import axiosInstance from "./axiosInstance";
 import { getErrorMessageFromError } from "../utilities/error-message";
 
-const getBookingDetails = async () => {
+const getBookingDetails = async (page = 1, showWishlistOnly=false) => {
 	try {
-		const response = await axiosInstance.get(`/api/booking`);
+		const response = await axiosInstance.get(`/api/booking?pageNo=${page}&wishList=${showWishlistOnly}`);
 		return response.data;
 	} catch (error) {
 		throw new Error(getErrorMessageFromError(error));
@@ -37,4 +37,14 @@ const getGuestBookingDetails = async (bookingId) => {
 	}
 };
 
-export { getBookingDetails, getBookingDetailsById, cancelTicket, getGuestBookingDetails };
+const getBookingDetailsByPnr = async (pnr) => {
+	try {
+		const response = await axiosInstance.get(`/api/booking/pnr/${pnr}`);
+		return response.data;
+	} catch (error) {
+		throw new Error(getErrorMessageFromError(error));
+	}
+};
+
+export { getBookingDetails, getBookingDetailsById, cancelTicket, getGuestBookingDetails, getBookingDetailsByPnr };
+

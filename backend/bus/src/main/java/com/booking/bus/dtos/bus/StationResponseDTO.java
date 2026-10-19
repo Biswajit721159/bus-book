@@ -1,17 +1,20 @@
 package com.booking.bus.dtos.bus;
 
 import com.booking.bus.entities.Station;
+import com.fasterxml.jackson.annotation.JsonFormat;
+import java.time.LocalTime;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import java.time.LocalTime;
 
 @Data
 @NoArgsConstructor
 public class StationResponseDTO {
     private Long id;
     private String stationName;
+
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "HH:mm:ss")
     private LocalTime arrivalTime;
+
     private int distanceFromLastStation;
     private int stationOrder;
 

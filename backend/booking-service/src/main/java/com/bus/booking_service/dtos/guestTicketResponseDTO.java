@@ -1,15 +1,17 @@
 package com.bus.booking_service.dtos;
+
 import com.bus.booking_service.entities.BookingSeats;
 import com.bus.booking_service.entities.Bookings;
 import com.bus.booking_service.enums.BookingStatus;
-import lombok.Data;
-
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import lombok.Data;
 
 @Data
 public class guestTicketResponseDTO {
+    private Long bookingId;
+    private String pnrNumber;
     private String busName;
     private int totalDistance;
     private String sourceStationName;
@@ -20,7 +22,10 @@ public class guestTicketResponseDTO {
     private List<SeatMapDTO> seatMap = new ArrayList<>();
 
     public guestTicketResponseDTO(Bookings bookings) {
+        this.bookingId = bookings.getId();
+        this.pnrNumber = bookings.getPnrNumber();
         this.busName = "Bus #" + bookings.getBusId();
+
         this.totalDistance = 0;
         this.sourceStationName = "Station #" + bookings.getSourceStationId();
         this.distStationStationName = "Station #" + bookings.getDestinationStationId();

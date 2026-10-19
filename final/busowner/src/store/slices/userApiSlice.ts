@@ -1,30 +1,15 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 import { API_BASE_URL } from '../../utils/constants';
-
-interface UserQuery {
-  page: number;
-  name: string;
-  email: string;
-}
-
-interface UserListItem {
-  name: string;
-  email: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
-interface GetUsersResponse {
-  statusCode: number;
-  message: string;
-  data: {
-    totalPage: number;
-    result: UserListItem[];
-  };
-}
+import {
+  GetStatsResponse,
+  GetUsersResponse,
+  UserListItem,
+  UserQuery,
+} from '../../types/user';
 
 export const userApiSlice = createApi({
   reducerPath: 'UserApi',
+  tagTypes: ['Users', 'UserStats'],
   baseQuery: fetchBaseQuery({
     baseUrl: API_BASE_URL,
     prepareHeaders: (headers) => {
@@ -44,12 +29,65 @@ export const userApiSlice = createApi({
   }),
   endpoints: (builder) => ({
     getUser: builder.query<GetUsersResponse, UserQuery>({
-      query: ({ page, name, email }) => ({
-        url: `/user/getUserByPage/?page=${encodeURIComponent(page)}&name=${encodeURIComponent(name)}&email=${encodeURIComponent(email)}`,
-        method: 'POST',
+      query: (params) => {
+        const queryParams = new URLSearchParams();
+        if (params.page !== undefined) queryParams.set('page', String(params.page));
+        if (params.limit !== undefined) queryParams.set('limit', String(params.limit));
+        if (params.search) queryParams.set('search', params.search);
+        if (params.name) queryParams.set('name', params.name);
+        if (params.email) queryParams.set('email', params.email);
+        if (params.role) queryParams.set('role', params.role);
+        if (params.isBlocked !== undefined && params.isBlocked !== '') {
+          queryParams.set('isBlocked', String(params.isBlocked));
+        }
+
+        return {
+          url: `/user/getUserByPage?${queryParams.toString()}`,
+          method: 'POST',
+        };
+      },
+      providesTags: ['Users'],
+    }),
+
+    getUserStats: builder.query<GetStatsResponse, void>({
+      query: () => ({
+        url: '/user/stats',
+        method: 'GET',
       }),
+      providesTags: ['UserStats'],
+    }),
+
+    toggleBlockUser: builder.mutation<any, number | string>({
+      query: (userId) => ({
+        url: `/user/${userId}/toggle-block`,
+        method: 'PATCH',
+      }),
+      invalidatesTags: ['Users', 'UserStats'],
+    }),
+
+    updateUserByAdmin: builder.mutation<any, { id: number | string; data: Partial<UserListItem> }>({
+      query: ({ id, data }) => ({
+        url: `/user/${id}`,
+        method: 'PUT',
+        body: data,
+      }),
+      invalidatesTags: ['Users', 'UserStats'],
+    }),
+
+    deleteUserByAdmin: builder.mutation<any, number | string>({
+      query: (userId) => ({
+        url: `/user/${userId}`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: ['Users', 'UserStats'],
     }),
   }),
 });
 
-export const { useGetUserQuery } = userApiSlice;
+export const {
+  useGetUserQuery,
+  useGetUserStatsQuery,
+  useToggleBlockUserMutation,
+  useUpdateUserByAdminMutation,
+  useDeleteUserByAdminMutation,
+} = userApiSlice;
