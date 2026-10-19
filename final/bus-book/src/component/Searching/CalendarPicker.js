@@ -118,17 +118,17 @@ export const CalendarPicker = ({ value, onChange, error }) => {
 	while (cells.length % 7 !== 0) cells.push(null);
 
 	return (
-		<div ref={containerRef} className="flex-shrink-0 lg:w-48">
+		<div ref={containerRef} className="flex-shrink-0 min-w-[170px] lg:w-56">
 			{/* Trigger */}
 			<button
 				ref={triggerRef}
 				type="button"
 				onClick={open ? close_ : open_}
-				className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-150 text-left
-          ${open ? "bg-primary-50 ring-2 ring-primary-400 ring-inset" : "hover:bg-surface-50"}
+				className={`w-full flex items-center gap-2.5 px-3 py-2 sm:py-2.5 rounded-xl transition-all duration-150 text-left
+          ${open ? "bg-blue-50/90 ring-2 ring-blue-500 ring-inset" : "hover:bg-slate-50"}
           ${error && !open ? "ring-2 ring-red-400 ring-inset" : ""}`}
 			>
-				<div className="flex-shrink-0 w-9 h-9 rounded-full bg-blue-100 flex items-center justify-center">
+				<div className="flex-shrink-0 w-8 h-8 rounded-lg bg-blue-50 text-blue-600 border border-blue-100 flex items-center justify-center">
 					<svg
 						className="w-4 h-4 text-blue-600"
 						fill="none"
@@ -138,21 +138,21 @@ export const CalendarPicker = ({ value, onChange, error }) => {
 						<path
 							strokeLinecap="round"
 							strokeLinejoin="round"
-							strokeWidth={2.5}
+							strokeWidth={2}
 							d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
 						/>
 					</svg>
 				</div>
 				<div className="flex-1 min-w-0">
-					<p className="text-xs font-semibold text-surface-400 uppercase tracking-wider mb-0.5">
+					<p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">
 						Date
 					</p>
 					{displayLabel ? (
-						<p className="text-sm font-bold text-surface-900 truncate">{displayLabel}</p>
+						<p className="text-xs sm:text-sm font-bold text-slate-900 whitespace-nowrap">{displayLabel}</p>
 					) : (
-						<p className="text-sm font-medium text-surface-400">Pick a date</p>
+						<p className="text-xs sm:text-sm font-medium text-slate-400 whitespace-nowrap">Pick date</p>
 					)}
-					{error && !open && <p className="text-xs text-red-500 mt-0.5">{typeof error === "string" ? error : (error.message || "This field is required")}</p>}
+					{error && !open && <p className="text-[11px] text-red-500 mt-0.5">{typeof error === "string" ? error : (error.message || "Required")}</p>}
 				</div>
 				{value && (
 					<span
@@ -162,9 +162,10 @@ export const CalendarPicker = ({ value, onChange, error }) => {
 							e.stopPropagation();
 							onChange("");
 						}}
-						className="w-5 h-5 rounded-full bg-surface-200 hover:bg-red-100 flex items-center justify-center text-surface-400 hover:text-red-500 transition-colors flex-shrink-0"
+						className="w-4 h-4 rounded-full bg-slate-200 hover:bg-rose-100 flex items-center justify-center text-slate-500 hover:text-rose-600 transition-colors flex-shrink-0"
+						title="Clear date"
 					>
-						<svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+						<svg className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
 							<path
 								strokeLinecap="round"
 								strokeLinejoin="round"

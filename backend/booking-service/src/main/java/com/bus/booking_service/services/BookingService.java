@@ -1,75 +1,105 @@
 package com.bus.booking_service.services;
+
+import com.bus.booking_service.constant.AppConstant;
+import com.bus.booking_service.dtos.BookingQueryDTO;
+import com.bus.booking_service.dtos.FrontendBookingDTO;
 import com.bus.booking_service.dtos.bookings.BookingTicketResponseDTo;
+import com.bus.booking_service.dtos.bookings.BookingsResponse;
 import com.bus.booking_service.dtos.bus.NormalUserBusResponseDto;
-import com.bus.booking_service.dtos.guestTicketResponseDTO;
 import com.bus.booking_service.dtos.cancelTicketDTO;
+import com.bus.booking_service.dtos.guestTicketResponseDTO;
 import com.bus.booking_service.dtos.internal.BusInternalDTO;
 import com.bus.booking_service.dtos.internal.StationInternalDTO;
-import com.bus.booking_service.internals.busApi;
-import com.bus.booking_service.internals.userApi;
 import com.bus.booking_service.dtos.masterList.masterListResponseDTO;
 import com.bus.booking_service.entities.*;
 import com.bus.booking_service.enums.BookingStatus;
+import com.bus.booking_service.enums.Role;
 import com.bus.booking_service.enums.SeatStatus;
 import com.bus.booking_service.exceptions.BadRequestException;
+import com.bus.booking_service.exceptions.ResourceNotFoundException;
 import com.bus.booking_service.exceptions.UnauthorizedException;
+import com.bus.booking_service.internals.busApi;
+import com.bus.booking_service.internals.userApi;
 import com.bus.booking_service.repository.BookingRepository;
 import com.bus.booking_service.repository.BookingSeatRepository;
 import com.bus.booking_service.repository.WishlistRepository;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-import com.bus.booking_service.enums.Role;
-import com.bus.booking_service.exceptions.ResourceNotFoundException;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.transaction.annotation.Transactional;
-import com.bus.booking_service.dtos.BookingQueryDTO;
-import com.bus.booking_service.dtos.FrontendBookingDTO;
-
-import java.util.*;
 import java.time.LocalDateTime;
+import java.util.*;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class BookingService {
-    @Autowired
-    private  BookingRepository bookingRepository;
-
-    @Autowired
-    private  BookingSeatRepository bookingSeatRepository;
-
-    @Autowired
-    private  WishlistRepository wishlistRepository;;
-
-    @Autowired
-    private busApi busApi;
-
-    @Autowired
-    private userApi userApi;
-
-    @Autowired
-    private WishlistService wishlistService;
+    private final BookingRepository bookingRepository;
+    private final BookingSeatRepository bookingSeatRepository;
+    private final WishlistRepository wishlistRepository;
+    private final busApi busApi;
+    private final userApi userApi;
+    private final WishlistService wishlistService;
+    private final BookingCacheService bookingCacheService;
 
     public Bookings findById(Long bookingId) {
-        return bookingRepository
-                .findById(bookingId)
-                .orElseThrow(() -> new ResourceNotFoundException("Booking not found with id: " + bookingId));
+        return bookingRepository.findById(bookingId).orElseThrow(() -> new ResourceNotFoundException("Booking not found with id: " +
+                bookingId));
     }
 
-    public List<BookingTicketResponseDTo> fetchBookingData(User user) {
-        log.info("Fetching booking data for user: {}, role: {}", user.getEmail(), user.getRole());
-        List<Bookings> bookingsData;
+    /**
+     * Use: Fetches bookings created by the regular passenger (user account) with pagination. App: Passenger / User Bus Booking Web App (My
+     * Bookings / Booking History).
+     */
+    @Cacheable(value = "userBookings", key = "#user.id + '-' + #pageNo + '-' + #wishList")
+    public BookingsResponse fetchBookingData(User user, int pageNo, boolean wishList) {
+        log.info("Fetching passenger booking data for user: {}, pageNo: {}", user.getEmail(), pageNo);
+
+        int zeroBasedPage = Math.max(0, pageNo > 0 ? pageNo - 1 : 0);
+        Pageable pageable = PageRequest.of(zeroBasedPage, AppConstant.GET_BOOKING_PAGE_SIZE, Sort.by(Sort.Direction.DESC, "createdAt"));
+
+        Page<Bookings> bookingsPage = wishList ? bookingRepository.findWishlistedBookingsByUserId(user.getId(), pageable)
+                : bookingRepository.findByCreatedByOrderByCreatedAtDesc(user.getId(), pageable);
+
+        return buildBookingsResponse(bookingsPage, user, wishList);
+    }
+
+    /**
+     * Use: Fetches bookings made on buses owned by the bus owner (or all bookings for super admin). App: Bus Owner Portal & Super Admin
+     * Dashboard (Fleet Bookings).
+     */
+    public BookingsResponse fetchOwnerBookingData(User user, int pageNo) {
+        log.info("Fetching fleet bookings for bus owner: {}, role: {}, pageNo: {}", user.getEmail(), user.getRole(), pageNo);
+
+        int zeroBasedPage = Math.max(0, pageNo > 0 ? pageNo - 1 : 0);
+        Pageable pageable = PageRequest.of(zeroBasedPage, AppConstant.GET_BOOKING_PAGE_SIZE, Sort.by(Sort.Direction.DESC, "createdAt"));
+
+        Page<Bookings> bookingsPage;
         if (user.getRole() == Role.SUPER_ADMIN) {
-            bookingsData = bookingRepository.findAllByOrderByCreatedAtDesc();
-        } else if (user.getRole() == Role.BUS_OWNER) {
+            bookingsPage = bookingRepository.findAllByOrderByCreatedAtDesc(pageable);
+        } else {
             List<Long> busIds = busApi.getBusIdsByOwner(user.getId());
             if (busIds.isEmpty()) {
-                bookingsData = List.of();
-            } else {
-                bookingsData = bookingRepository.findByBusIdInOrderByCreatedAtDesc(busIds);
+                return new BookingsResponse(List.of(), false, false, 0, 0);
             }
-        } else {
-            bookingsData = bookingRepository.findByCreatedByOrderByCreatedAtDesc(user.getId());
+            bookingsPage = bookingRepository.findByBusIdInOrderByCreatedAtDesc(busIds, pageable);
         }
+
+        return buildBookingsResponse(bookingsPage, user, false);
+    }
+
+    private BookingsResponse buildBookingsResponse(Page<Bookings> bookingsPage, User user, boolean wishList) {
+        List<Bookings> bookingsData = bookingsPage.getContent();
+
+        boolean hasNext = bookingsPage.hasNext();
+        boolean hasPrevious = bookingsPage.hasPrevious();
+        int totalPages = bookingsPage.getTotalPages();
+        long totalElements = bookingsPage.getTotalElements();
 
         List<BookingTicketResponseDTo> finalBookings = new ArrayList<>();
         for (Bookings booking : bookingsData) {
@@ -85,40 +115,37 @@ public class BookingService {
             finalBookings.add(bookingTicketResponse);
         }
 
-        wishlistService.updateWishListForAll(bookingsData, finalBookings, user);
-        return finalBookings;
+        wishlistService.updateWishListForAll(bookingsData, finalBookings, user, wishList);
+        return new BookingsResponse(finalBookings, hasNext, hasPrevious, totalPages, totalElements);
     }
 
-    public List<BookingSeats> fetchSeatByBookingId(BookingTicketResponseDTo booking) {
-        return bookingSeatRepository.findSeatDetailsByBookingId(booking.getId());
-    }
+    public BookingTicketResponseDTo fetchSeatByBookingId(String identifier, User user) {
+        // Try finding by PNR number first
+        Optional<Bookings> data = bookingRepository.findBookingWithSeatsByPnrNumberAndCreatedBy(identifier, user.getId());
 
-    public BookingTicketResponseDTo fetchSeatByBookingId(Long id, User user) {
-        Bookings booking = bookingRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Booking not found"));
-        List<BookingSeats> Seats = bookingSeatRepository.findSeatDetailsByBookingId(booking.getId());
-
-        NormalUserBusResponseDto bus = busApi.getBusById(booking.getBusId());
-
-        // Authorization check
-        if (user.getRole() == Role.BUS_OWNER) {
-            List<Long> busIds = busApi.getBusIdsByOwner(user.getId());
-            if (!busIds.contains(booking.getBusId())) {
-                throw new UnauthorizedException("Unauthorized: You do not own this bus");
-            }
-        } else {
-            if (!booking.getCreatedBy().equals(user.getId())) {
-                throw new UnauthorizedException("Unauthorized: You did not create this booking");
+        // If not found by PNR, try finding by numeric ID
+        if (data.isEmpty()) {
+            try {
+                Long id = Long.parseLong(identifier);
+                data = bookingRepository.findBookingWithSeatsByIdAndCreatedBy(id, user.getId());
+            } catch (NumberFormatException ignored) {
             }
         }
+
+        if (data.isEmpty()) {
+            throw new ResourceNotFoundException("Booking not found");
+        }
+        Bookings booking = data.get();
+
+        List<BookingSeats> Seats = booking.getSeats();
+
+        NormalUserBusResponseDto bus = busApi.getBusById(booking.getBusId());
 
         List<Long> masterListUserIds = Seats.stream().map(BookingSeats::getPassengerId).toList();
         List<masterListResponseDTO> masterList = userApi.fetchMasterListUsers(masterListUserIds);
 
-        List<BookingSeats> bookingSeats = bookingSeatRepository.findSeatDetailsByBookingId(booking.getId());
-
         BookingTicketResponseDTo bookingTicketResponse = new BookingTicketResponseDTo(booking, bus);
-        bookingTicketResponse.setPassengerSeatMap(bookingSeats, masterList);
+        bookingTicketResponse.setPassengerSeatMap(Seats, masterList);
 
         Wishlist wishlist = wishlistRepository.findByBookingAndUser(booking, user.getId());
 
@@ -127,6 +154,10 @@ public class BookingService {
         }
 
         return bookingTicketResponse;
+    }
+
+    public BookingTicketResponseDTo fetchSeatByBookingId(Long id, User user) {
+        return fetchSeatByBookingId(String.valueOf(id), user);
     }
 
     @Transactional
@@ -153,8 +184,7 @@ public class BookingService {
         }
 
         long bookingId = bookingSeats.getFirst().getBookingId().getId();
-        Bookings booking = bookingRepository.findById(bookingId)
-                .orElseThrow(() -> new ResourceNotFoundException("Booking not found"));
+        Bookings booking = bookingRepository.findById(bookingId).orElseThrow(() -> new ResourceNotFoundException("Booking not found"));
 
         if (booking.getStatus() == BookingStatus.CANCELLED) {
             throw new BadRequestException("Booking is already cancelled");
@@ -166,21 +196,34 @@ public class BookingService {
         bookingSeatRepository.updateSeatStatus(body.getSeatTicket(), SeatStatus.CANCELLED);
 
         List<BookingSeats> allSeats = bookingSeatRepository.findSeatDetailsByBookingId(bookingId);
-        boolean allCancelled = allSeats.stream().allMatch(seat ->
-                body.getSeatTicket().contains(seat.getId()) || seat.getStatus() == SeatStatus.CANCELLED
-        );
+        boolean allCancelled = allSeats.stream().allMatch(seat -> body.getSeatTicket().contains(seat.getId()) || seat
+                .getStatus() == SeatStatus.CANCELLED);
         if (allCancelled) {
             booking.setStatus(BookingStatus.CANCELLED);
             bookingRepository.save(booking);
+        }
+
+        // Evict cache only for the affected user(s)
+        bookingCacheService.evictUserBookings(user.getId());
+        if (booking.getCreatedBy() != null && !booking.getCreatedBy().equals(user.getId())) {
+            bookingCacheService.evictUserBookings(booking.getCreatedBy());
         }
 
         return fetchSeatByBookingId(bookingId, user);
     }
 
     public guestTicketResponseDTO fetchBookingDataForGuest(Long bookingId) {
-        Bookings booking = bookingRepository.findById(bookingId)
-                .orElseThrow(() -> new ResourceNotFoundException("Booking not found"));
+        Bookings booking = bookingRepository.findById(bookingId).orElseThrow(() -> new ResourceNotFoundException("Booking not found"));
         List<BookingSeats> bookingSeats = bookingSeatRepository.findSeatDetailsByBookingId(bookingId);
+        guestTicketResponseDTO guestTicketResponse = new guestTicketResponseDTO(booking);
+        guestTicketResponse.updateBookingSeat(bookingSeats);
+        return guestTicketResponse;
+    }
+
+    public guestTicketResponseDTO fetchBookingDataForGuestByPnr(String pnrNumber) {
+        Bookings booking = bookingRepository.findByPnrNumber(pnrNumber).orElseThrow(() -> new ResourceNotFoundException(
+                "Booking not found with PNR: " + pnrNumber));
+        List<BookingSeats> bookingSeats = bookingSeatRepository.findSeatDetailsByBookingId(booking.getId());
         guestTicketResponseDTO guestTicketResponse = new guestTicketResponseDTO(booking);
         guestTicketResponse.updateBookingSeat(bookingSeats);
         return guestTicketResponse;
@@ -188,7 +231,7 @@ public class BookingService {
 
     public Map<String, Object> fetchBookingsPagination(BookingQueryDTO query, User user) {
         log.info("Fetching paginated bookings for user: {}, role: {}, query: {}", user.getEmail(), user.getRole(), query);
-        List<Bookings> bookingsData;
+        List<Bookings> bookingsData = new ArrayList<>();
         if (user.getRole() == Role.SUPER_ADMIN) {
             bookingsData = bookingRepository.findAllByOrderByCreatedAtDesc();
         } else if (user.getRole() == Role.BUS_OWNER) {
@@ -198,8 +241,6 @@ public class BookingService {
             } else {
                 bookingsData = bookingRepository.findByBusIdInOrderByCreatedAtDesc(busIds);
             }
-        } else {
-            bookingsData = bookingRepository.findByCreatedByOrderByCreatedAtDesc(user.getId());
         }
 
         List<FrontendBookingDTO> filteredBookings = new ArrayList<>();
@@ -254,6 +295,30 @@ public class BookingService {
                     continue;
                 }
             }
+            // Filter by PNR
+            if (query.getPnr() != null && !query.getPnr().isBlank()) {
+                String searchPnr = query.getPnr().trim().toLowerCase();
+                if (dto.getPnr_number() == null || !dto.getPnr_number().toLowerCase().contains(searchPnr)) {
+                    continue;
+                }
+            }
+            // Filter by Booking ID
+            if (query.getBookingId() != null && !query.getBookingId().isBlank()) {
+                String searchId = query.getBookingId().trim();
+                if (dto.get_id() == null || !dto.get_id().equalsIgnoreCase(searchId)) {
+                    continue;
+                }
+            }
+            // Filter by general search term (PNR, Booking ID, or User Email)
+            if (query.getSearch() != null && !query.getSearch().isBlank()) {
+                String term = query.getSearch().trim().toLowerCase();
+                boolean matchPnr = dto.getPnr_number() != null && dto.getPnr_number().toLowerCase().contains(term);
+                boolean matchId = dto.get_id() != null && dto.get_id().equalsIgnoreCase(term);
+                boolean matchEmail = dto.getUseremail() != null && dto.getUseremail().toLowerCase().contains(term);
+                if (!matchPnr && !matchId && !matchEmail) {
+                    continue;
+                }
+            }
 
             filteredBookings.add(dto);
         }
@@ -261,7 +326,8 @@ public class BookingService {
         int itemsPerPage = 10;
         int totalItems = filteredBookings.size();
         int totalPages = (int) Math.ceil((double) totalItems / itemsPerPage);
-        if (totalPages == 0) totalPages = 1;
+        if (totalPages == 0)
+            totalPages = 1;
 
         int fromIndex = (query.getCurrentPage() - 1) * itemsPerPage;
         int toIndex = Math.min(fromIndex + itemsPerPage, totalItems);

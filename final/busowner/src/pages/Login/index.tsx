@@ -31,14 +31,17 @@ export const Login: React.FC = () => {
 
   const heading =
     step === 1
-      ? { title: 'Welcome back', subtitle: 'Sign in to your account' }
+      ? {
+          title: 'Operator Sign In',
+          subtitle: 'Welcome back! Access your fleet dashboard and booking manifests.',
+        }
       : {
-          title: 'Enter OTP',
+          title: 'Enter Verification Code',
           subtitle: (
-            <>
-              We&apos;ve sent a 6-digit code to{' '}
-              <span className="font-semibold text-slate-800">{emailForOtp}</span>
-            </>
+            <span>
+              We've sent a 6-digit one-time code to{' '}
+              <strong className="text-slate-900 font-semibold">{emailForOtp}</strong>
+            </span>
           ),
         };
 
@@ -59,21 +62,24 @@ export const Login: React.FC = () => {
             <button
               type="button"
               onClick={goBack}
-              className="text-sm font-semibold text-slate-500 hover:text-slate-800 transition-colors"
+              className="text-xs font-bold text-slate-500 hover:text-slate-800 transition-colors inline-flex items-center gap-1.5 cursor-pointer"
             >
-              ← Back to Login
+              <span>← Back to Email Sign In</span>
             </button>
           </div>
         </div>
       )}
 
       {step === 1 && (
-        <p className="text-center text-sm text-slate-500 mt-8">
-          Don&apos;t have an account?{' '}
-          <Link to="/Register" className="text-indigo-600 hover:text-indigo-700 font-semibold transition-colors">
-            Create one
+        <div className="mt-8 pt-6 border-t border-slate-100 text-center text-xs text-slate-500">
+          <span>New bus operator or fleet manager? </span>
+          <Link
+            to="/Register"
+            className="text-blue-600 hover:text-blue-700 font-bold transition-colors ml-1"
+          >
+            Register your fleet ➔
           </Link>
-        </p>
+        </div>
       )}
     </AuthCard>
   );

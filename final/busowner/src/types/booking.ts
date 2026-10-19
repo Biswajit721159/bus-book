@@ -2,6 +2,7 @@ import { Bus } from './bus';
 
 export interface Booking {
   _id: string;
+  pnr_number?: string;
   useremail: string;
   bus_id: string;
   bus?: {
@@ -19,13 +20,22 @@ export interface Booking {
   updatedAt: string;
 }
 
+
 export interface BookingQuery {
   currentPage: number;
-  Email: string;
-  Src: string;
-  Dist: string;
-  BookingDate: string;
-  BusName: string;
+  Email?: string;
+  email?: string;
+  Src?: string;
+  src?: string;
+  Dist?: string;
+  dist?: string;
+  BookingDate?: string;
+  bookingDate?: string;
+  BusName?: string;
+  busName?: string;
+  pnr?: string;
+  bookingId?: string;
+  search?: string;
 }
 
 export interface GetBookingsResponse {

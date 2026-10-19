@@ -1,6 +1,5 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axiosInstance from "../apis/axiosInstance";
-const api = process.env.REACT_APP_API;
 
 export const loadStation = createAsyncThunk("busTable/loadStation", async () => {
 	try {
@@ -30,82 +29,69 @@ export const fetchBusData = createAsyncThunk("busTable/fetchBusData", async (bod
 });
 
 const initialState = {
+	topRatedBuses: [],
+	topRatedLoaded: false,
+	loadingTopRated: false,
 	mainBus: [],
 	Bus: [],
 	station: [],
 	loadingBus: false,
 	loadingStation: false,
+	stationLoaded: false,
+	busLoaded: false,
 	error: null,
 	searchinput: "Riktam",
 };
 
+// Safe helper parsing
+function parseTimeMinutes(timeStr) {
+	if (!timeStr || typeof timeStr !== "string") return 0;
+	const parts = timeStr.trim().split(":");
+	if (parts.length >= 2) {
+		const hh = parseInt(parts[0], 10) || 0;
+		const mm = parseInt(parts[1], 10) || 0;
+		return hh * 60 + mm;
+	}
+	return 0;
+}
+
+function parseDurationMinutes(durationStr) {
+	if (!durationStr || typeof durationStr !== "string") return 0;
+	const hoursMatch = durationStr.match(/(\d+)\s*h/i);
+	const minsMatch = durationStr.match(/(\d+)\s*m/i);
+	const hours = hoursMatch ? parseInt(hoursMatch[1], 10) : 0;
+	const mins = minsMatch ? parseInt(minsMatch[1], 10) : 0;
+	return hours * 60 + mins;
+}
+
+const getDepartureMinutes = (bus) => {
+	// Source station departure time
+	const time = bus?.arrivalTime || bus?.start_time || bus?.departureTime;
+	return parseTimeMinutes(time);
+};
+
+const getArrivalMinutes = (bus) => {
+	// Destination station arrival time
+	const time = bus?.departureTime || bus?.end_arrive_time || bus?.arrivalTime;
+	return parseTimeMinutes(time);
+};
+
+const getPrice = (bus) => {
+	if (typeof bus?.price === "number") return bus.price;
+	return (bus?.totalDistance || 0) * 5;
+};
+
+const getRating = (bus) => {
+	return Number(bus?.averageRating) || 0;
+};
+
 function searchproduct(searchinput, bus) {
-	if (searchinput.length === 0) {
-		return bus;
+	if (!searchinput || searchinput.length === 0) {
+		return bus || [];
 	} else {
-		searchinput = searchinput.toLowerCase();
-		let newbus = [];
-		for (let i = 0; i < bus.length; i++) {
-			let s = bus[i].busName;
-			s = s.toLowerCase();
-			if (KMP(searchinput, s) === true || check_All_Charcter(searchinput, s)) {
-				newbus.push(bus[i]);
-			}
-		}
-		return newbus;
+		const q = searchinput.toLowerCase().trim();
+		return (bus || []).filter((b) => b?.busName && b.busName.toLowerCase().includes(q));
 	}
-}
-
-function KMP(searchproduct, product_name) {
-	let patt = solve1(searchproduct);
-	let original = solve2(product_name);
-	let n = patt.length;
-	for (let i = 0; i < original.length - n + 1; i++) {
-		let generate = original.substring(i, i + n);
-		if (generate === patt) return true;
-	}
-	return false;
-}
-
-function check_All_Charcter(searchproduct, product_name) {
-	let s = product_name;
-	let patt = searchproduct;
-	let i = 0;
-	let j = 0;
-	let n = s.length;
-	let m = patt.length;
-	while (i < n && j < m) {
-		if (patt[j] === s[i]) {
-			i++;
-			j++;
-		} else {
-			i++;
-		}
-	}
-	if (j === m) {
-		return true;
-	}
-	return false;
-}
-
-function solve1(s) {
-	let res = "";
-	for (let i = 0; i < s.length; i++) {
-		if (s[i] >= "a" && s[i] < "z") {
-			res += s[i];
-		}
-	}
-	return res;
-}
-
-function solve2(s) {
-	let res = "";
-	for (let i = 0; i < s.length; i++) {
-		if (s[i] >= "a" && s[i] < "z") {
-			res += s[i];
-		}
-	}
-	return res;
 }
 
 const busTableSlice = createSlice({
@@ -114,103 +100,52 @@ const busTableSlice = createSlice({
 	reducers: {
 		Addsearch: (state, action) => {
 			state.searchinput = action?.payload?.searchinput;
-			state.Bus = searchproduct(action?.payload?.searchinput, action?.payload?.bus);
+			state.Bus = searchproduct(action?.payload?.searchinput, action?.payload?.bus || state.mainBus);
 		},
 		DurationEarlyFirst: (state, action) => {
-			let bus = action?.payload;
-			let sortedBuses = [...bus].sort((a, b) => {
-				let fa = HourToMin(a?.totalTime);
-				let fb = HourToMin(b?.totalTime);
-
-				if (fa < fb) {
-					return -1;
-				}
-				if (fa > fb) {
-					return 1;
-				}
-				return 0;
-			});
-			state.Bus = sortedBuses;
+			const list = action?.payload && action.payload.length > 0 ? action.payload : state.Bus;
+			state.Bus = [...list].sort(
+				(a, b) => parseDurationMinutes(a?.totalTime) - parseDurationMinutes(b?.totalTime)
+			);
 		},
 		DurationLateFirst: (state, action) => {
-			let bus = action?.payload;
-			let sortedBuses = [...bus]?.sort((a, b) => {
-				let fa = HourToMin(a?.totalTime);
-				let fb = HourToMin(b?.totalTime);
-
-				if (fa > fb) {
-					return -1;
-				}
-				if (fa < fb) {
-					return 1;
-				}
-				return 0;
-			});
-			state.Bus = sortedBuses;
+			const list = action?.payload && action.payload.length > 0 ? action.payload : state.Bus;
+			state.Bus = [...list].sort(
+				(a, b) => parseDurationMinutes(b?.totalTime) - parseDurationMinutes(a?.totalTime)
+			);
 		},
 		DepartureEarlyFirst: (state, action) => {
-			let bus = action?.payload;
-			let sortedBuses = [...bus]?.sort((a, b) => {
-				let fa = finMinutes(a?.end_arrive_time);
-				let fb = finMinutes(b?.end_arrive_time);
-
-				if (fa < fb) {
-					return -1;
-				}
-				if (fa > fb) {
-					return 1;
-				}
-				return 0;
-			});
-			state.Bus = sortedBuses;
+			const list = action?.payload && action.payload.length > 0 ? action.payload : state.Bus;
+			state.Bus = [...list].sort((a, b) => getDepartureMinutes(a) - getDepartureMinutes(b));
 		},
 		DepartureLateFirst: (state, action) => {
-			let bus = action?.payload;
-			let sortedBuses = [...bus]?.sort((a, b) => {
-				let fa = finMinutes(a?.end_arrive_time);
-				let fb = finMinutes(b?.end_arrive_time);
-
-				if (fa > fb) {
-					return -1;
-				}
-				if (fa < fb) {
-					return 1;
-				}
-				return 0;
-			});
-			state.Bus = sortedBuses;
+			const list = action?.payload && action.payload.length > 0 ? action.payload : state.Bus;
+			state.Bus = [...list].sort((a, b) => getDepartureMinutes(b) - getDepartureMinutes(a));
 		},
 		ArrivalEarlyFirst: (state, action) => {
-			let bus = action?.payload;
-			let sortedBuses = [...bus]?.sort((a, b) => {
-				let fa = finMinutes(a?.arrivalTime);
-				let fb = finMinutes(b?.arrivalTime);
-
-				if (fa < fb) {
-					return -1;
-				}
-				if (fa > fb) {
-					return 1;
-				}
-				return 0;
-			});
-			state.Bus = sortedBuses;
+			const list = action?.payload && action.payload.length > 0 ? action.payload : state.Bus;
+			state.Bus = [...list].sort((a, b) => getArrivalMinutes(a) - getArrivalMinutes(b));
 		},
 		ArrivalLateFirst: (state, action) => {
-			let bus = action?.payload;
-			let sortedBuses = [...bus]?.sort((a, b) => {
-				let fa = finMinutes(a?.arrivalTime);
-				let fb = finMinutes(b?.arrivalTime);
-
-				if (fa > fb) {
-					return -1;
-				}
-				if (fa < fb) {
-					return 1;
-				}
-				return 0;
-			});
-			state.Bus = sortedBuses;
+			const list = action?.payload && action.payload.length > 0 ? action.payload : state.Bus;
+			state.Bus = [...list].sort((a, b) => getArrivalMinutes(b) - getArrivalMinutes(a));
+		},
+		PriceLowFirst: (state, action) => {
+			const list = action?.payload && action.payload.length > 0 ? action.payload : state.Bus;
+			state.Bus = [...list].sort((a, b) => getPrice(a) - getPrice(b));
+		},
+		PriceHighFirst: (state, action) => {
+			const list = action?.payload && action.payload.length > 0 ? action.payload : state.Bus;
+			state.Bus = [...list].sort((a, b) => getPrice(b) - getPrice(a));
+		},
+		RatingHighFirst: (state, action) => {
+			const list = action?.payload && action.payload.length > 0 ? action.payload : state.Bus;
+			state.Bus = [...list].sort((a, b) => getRating(b) - getRating(a));
+		},
+		ResetFilter: (state) => {
+			if (state.mainBus && state.mainBus.length > 0) {
+				state.Bus = [...state.mainBus];
+			}
 		},
 	},
 	extraReducers: (builder) => {
@@ -221,22 +156,33 @@ const busTableSlice = createSlice({
 			})
 			.addCase(loadStation.fulfilled, (state, action) => {
 				state.loadingStation = false;
-				state.station = action.payload;
+				state.stationLoaded = true;
+				state.station = action.payload || [];
 			})
 			.addCase(loadStation.rejected, (state, action) => {
 				state.loadingStation = false;
+				state.stationLoaded = true;
 				state.error = action.error.message;
 			})
 			.addCase(loadBus.pending, (state) => {
+				state.loadingTopRated = true;
 				state.loadingBus = true;
 				state.error = null;
 			})
 			.addCase(loadBus.fulfilled, (state, action) => {
+				state.loadingTopRated = false;
+				state.topRatedLoaded = true;
+				state.topRatedBuses = action.payload || [];
 				state.loadingBus = false;
-				state.Bus = action.payload;
+				state.busLoaded = true;
+				state.mainBus = action.payload || [];
+				state.Bus = action.payload || [];
 			})
 			.addCase(loadBus.rejected, (state, action) => {
+				state.loadingTopRated = false;
+				state.topRatedLoaded = true;
 				state.loadingBus = false;
+				state.busLoaded = true;
 				state.error = action.error.message;
 			})
 			.addCase(fetchBusData.pending, (state) => {
@@ -247,44 +193,18 @@ const busTableSlice = createSlice({
 			.addCase(fetchBusData.fulfilled, (state, action) => {
 				state.loadingBus = false;
 				state.loadingStation = false;
-				state.Bus = action.payload;
+				state.busLoaded = true;
+				state.mainBus = action.payload || [];
+				state.Bus = action.payload || [];
 			})
 			.addCase(fetchBusData.rejected, (state, action) => {
 				state.loadingBus = false;
 				state.loadingStation = false;
+				state.busLoaded = true;
 				state.error = action?.payload?.errorMessage;
 			});
 	},
 });
-
-function HourToMin(s) {
-	let count = 0;
-	let ans = 0;
-	let i = 0;
-	let n = s.length;
-	while (i < n && s[i] !== "h") {
-		count = count * 10 + (s[i] - "0");
-		i++;
-	}
-	ans += count * 60;
-	i += 2;
-	count = 0;
-	while (i < n && s[i] !== "m") {
-		count = count * 10 + (s[i] - "0");
-		i++;
-	}
-	ans += count;
-	return ans;
-}
-
-function finMinutes(s) {
-	let hh = s.substr(0, 2);
-	let mm = s.substr(3, 2);
-
-	hh = parseInt(hh);
-	mm = parseInt(mm);
-	return hh * 60 + mm;
-}
 
 export const BusTablemethod = busTableSlice.actions;
 export default busTableSlice.reducer;

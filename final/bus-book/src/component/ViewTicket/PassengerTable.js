@@ -1,22 +1,39 @@
+import React from "react";
+import Checkbox from "../Checkbox";
+
 const PassengerTable = ({ data, cancelTicketIds, cancelLoading, onCancelClick, onSelectTicket }) => {
 	if (!data || !data.seatDetails) return null;
 
 	const isCompleted = data?.bookingDate ? new Date(data.bookingDate) < new Date() : false;
 
 	return (
-		<div className="card overflow-hidden shadow-sm border border-surface-200 rounded-xl bg-white">
-			<div className="flex justify-between items-center px-6 py-4 border-b border-surface-100 bg-surface-50/50">
-				<div className="flex items-center gap-2">
-					<h2 className="font-semibold text-surface-900 text-lg">Passengers</h2>
-					<span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-surface-100 text-surface-600">
-						{data.seatDetails.length} total
-					</span>
+		<div className="bg-white rounded-2xl border border-surface-200 shadow-sm overflow-hidden mb-6">
+			{/* Header */}
+			<div className="flex flex-wrap justify-between items-center px-6 py-4 border-b border-surface-100 bg-surface-50/70 gap-3">
+				<div className="flex items-center gap-2.5">
+					<div className="w-8 h-8 rounded-lg bg-blue-100 text-blue-700 flex items-center justify-center font-bold">
+						<svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+							<path
+								strokeLinecap="round"
+								strokeLinejoin="round"
+								strokeWidth={2}
+								d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
+							/>
+						</svg>
+					</div>
+					<div>
+						<h2 className="font-bold text-surface-900 text-base">Passenger List</h2>
+						<p className="text-xs text-surface-500">
+							{data.seatDetails.length} {data.seatDetails.length === 1 ? "passenger" : "passengers"} on this ticket
+						</p>
+					</div>
 				</div>
+
 				<button
-					className={`btn-danger btn-sm flex items-center gap-1.5 transition-all duration-150 ${
+					className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold border transition-all duration-200 shadow-sm ${
 						cancelTicketIds.length === 0
-							? "opacity-50 cursor-not-allowed bg-surface-100 border-surface-200 text-surface-400 hover:bg-surface-100"
-							: ""
+							? "opacity-50 cursor-not-allowed bg-surface-100 border-surface-200 text-surface-400"
+							: "bg-rose-50 border-rose-200 text-rose-700 hover:bg-rose-100 hover:border-rose-300 active:scale-95 shadow-rose-100"
 					}`}
 					onClick={onCancelClick}
 					disabled={cancelLoading || cancelTicketIds.length === 0}
@@ -33,51 +50,100 @@ const PassengerTable = ({ data, cancelTicketIds, cancelLoading, onCancelClick, o
 				</button>
 			</div>
 
-			<div className="table-container border-0 shadow-none rounded-none overflow-x-auto">
-				<table className="table-base w-full border-collapse">
-					<thead className="table-head">
-						<tr>
-							<th className="table-th py-3 text-left text-center">Select</th>
-							<th className="table-th py-3 text-left text-center">Name</th>
-							<th className="table-th py-3 text-left text-center">Seat No</th>
-							<th className="table-th py-3 text-left text-center">Status</th>
+			{/* Table */}
+			<div className="overflow-x-auto">
+				<table className="w-full border-collapse text-left text-sm">
+					<thead>
+						<tr className="border-b border-surface-100 bg-surface-50/50 text-[11px] font-bold text-surface-500 uppercase tracking-wider">
+							<th className="py-3 px-6 text-center w-16">Select</th>
+							<th className="py-3 px-6">Passenger</th>
+							<th className="py-3 px-6 text-center">Seat</th>
+							<th className="py-3 px-6 text-center">Status</th>
 						</tr>
 					</thead>
-					<tbody className="bg-white divide-y divide-surface-100">
+					<tbody className="divide-y divide-surface-100">
 						{data.seatDetails.map((item, ind) => {
 							const isCancelled = item.status === "CANCELLED";
 							const isRowCompleted = isCompleted;
+							const initial = (item.name || "P").charAt(0).toUpperCase();
 
 							return (
-								<tr key={ind} className="table-row transition-colors hover:bg-surface-50/50">
-									<td className="table-td font-medium text-surface-900 py-3 text-center">
-										<input
-											className="w-3.5 h-3.5 border border-2 rounded-lg cursor-pointer hover:scale-105 transition-all duration-150"
-											type="checkbox"
-											disabled={isCancelled || isRowCompleted}
-											checked={cancelTicketIds.includes(item?.id)}
-											onChange={(e) => onSelectTicket(e.target.checked, item?.id)}
-										/>
+								<tr
+									key={ind}
+									className={`transition-colors duration-150 ${
+										cancelTicketIds.includes(item?.id)
+											? "bg-rose-50/30"
+											: isCancelled
+											? "bg-surface-50/40 opacity-75"
+											: "hover:bg-blue-50/30"
+									}`}
+								>
+									{/* Checkbox */}
+									<td className="py-3.5 px-6 text-center">
+										<div className="flex justify-center">
+											<Checkbox
+												size="sm"
+												variant="rose"
+												disabled={isCancelled || isRowCompleted}
+												checked={cancelTicketIds.includes(item?.id)}
+												onChange={(e) => onSelectTicket(e.target.checked, item?.id)}
+												id={`cancel-passenger-${item?.id || ind}`}
+												aria-label={`Select ${item.name} for cancellation`}
+											/>
+										</div>
 									</td>
-									<td className="table-td font-medium text-surface-900 py-3 text-center">
-										{item.name}
+
+									{/* Name with avatar */}
+									<td className="py-3.5 px-6">
+										<div className="flex items-center gap-3">
+											<div
+												className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 ${
+													isCancelled
+														? "bg-rose-100 text-rose-700"
+														: isRowCompleted
+														? "bg-surface-200 text-surface-700"
+														: "bg-blue-100 text-blue-700"
+												}`}
+											>
+												{initial}
+											</div>
+											<div>
+												<p className="font-bold text-surface-900 leading-tight">{item.name}</p>
+												<p className="text-[11px] text-surface-500 font-medium">Passenger #{ind + 1}</p>
+											</div>
+										</div>
 									</td>
-									<td className="table-td py-3 text-center">
-										<span className="badge badge-blue bg-blue-50 text-blue-700 border border-blue-100 px-2 py-0.5 rounded text-xs font-semibold">
+
+									{/* Seat Number */}
+									<td className="py-3.5 px-6 text-center">
+										<span className="inline-flex items-center gap-1 px-3 py-1 rounded-lg text-xs font-bold bg-blue-50 text-blue-700 border border-blue-200/80">
+											<svg className="w-3.5 h-3.5 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+												<path
+													strokeLinecap="round"
+													strokeLinejoin="round"
+													strokeWidth={2}
+													d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z"
+												/>
+											</svg>
 											Seat {item.seatNumber}
 										</span>
 									</td>
-									<td className="table-td py-3 text-center">
+
+									{/* Status */}
+									<td className="py-3.5 px-6 text-center">
 										{isCancelled ? (
-											<span className="badge bg-red-500 text-white border border-red-100 px-2.5 py-0.5 rounded text-xs font-medium">
+											<span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-rose-50 text-rose-700 border border-rose-200">
+												<span className="w-1.5 h-1.5 rounded-full bg-rose-500"></span>
 												Cancelled
 											</span>
 										) : isRowCompleted ? (
-											<span className="badge bg-blue-500 text-white border border-blue-100 px-2.5 py-0.5 rounded text-xs font-medium">
+											<span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-200">
+												<span className="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
 												Completed
 											</span>
 										) : (
-											<span className="badge bg-green-500 text-white border border-green-100 px-2.5 py-0.5 rounded text-xs font-medium">
+											<span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+												<span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
 												{item.status === "CONFIRMED" ? "Confirmed" : item.status}
 											</span>
 										)}

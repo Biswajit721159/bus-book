@@ -14,18 +14,9 @@ public class OpenApiConfig {
     @Bean
     public OpenAPI customOpenAPI() {
         final String securitySchemeName = "bearerAuth";
-        return new OpenAPI()
-                .info(new Info()
-                        .title("Bus Booking API")
-                        .version("1.0")
-                        .description("API documentation for Bus Booking application"))
-                .addSecurityItem(new SecurityRequirement().addList(securitySchemeName))
-                .components(new Components()
-                        .addSecuritySchemes(securitySchemeName,
-                                new SecurityScheme()
-                                        .name(securitySchemeName)
-                                        .type(SecurityScheme.Type.HTTP)
-                                        .scheme("bearer")
-                                        .bearerFormat("JWT")));
+        return new OpenAPI().info(new Info().title("Bus Booking API").version("1.0").description(
+                "API documentation for Bus Booking application")).addSecurityItem(new SecurityRequirement().addList(securitySchemeName))
+                .components(new Components().addSecuritySchemes(securitySchemeName, new SecurityScheme().name(securitySchemeName).type(
+                        SecurityScheme.Type.HTTP).scheme("bearer").bearerFormat("JWT")));
     }
 }

@@ -41,7 +41,7 @@ export const BookingTable: React.FC<BookingTableProps> = ({ data }) => {
           <table className="data-table">
             <thead>
               <tr className="bg-slate-50 border-b border-slate-100">
-                <th className="px-5 py-3 text-left text-xs font-bold text-slate-400 uppercase tracking-wider">Booking ID / Email</th>
+                <th className="px-5 py-3 text-left text-xs font-bold text-slate-400 uppercase tracking-wider">PNR / Booking ID</th>
                 <th className="px-5 py-3 text-left text-xs font-bold text-slate-400 uppercase tracking-wider">Timestamps</th>
                 <th className="px-5 py-3 text-left text-xs font-bold text-slate-400 uppercase tracking-wider">Bus</th>
                 <th className="px-5 py-3 text-left text-xs font-bold text-slate-400 uppercase tracking-wider">Route</th>
@@ -55,9 +55,18 @@ export const BookingTable: React.FC<BookingTableProps> = ({ data }) => {
               {data.map((item, index) => (
                 <tr key={item._id || index} className="border-b border-slate-100 hover:bg-slate-50/40 transition-colors">
                   <td className="px-5 py-4">
-                    <span className="bg-slate-50 text-slate-600 border border-slate-100 px-2 py-0.5 rounded-md font-mono text-[9px] tracking-tight">{item._id}</span>
-                    <p className="text-xs text-primary-600 font-semibold mt-1">{item.useremail}</p>
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      {item.pnr_number && (
+                        <span className="bg-primary-50 text-primary-700 border border-primary-200 px-2 py-0.5 rounded-md font-mono text-[11px] font-bold tracking-wider">
+                          PNR: {item.pnr_number}
+                        </span>
+                      )}
+                      <span className="bg-slate-50 text-slate-500 border border-slate-100 px-1.5 py-0.5 rounded-md font-mono text-[9px] tracking-tight">
+                        #{item._id}
+                      </span>
+                    </div>
                   </td>
+
                   <td className="px-5 py-4">
                     <p className="text-[10px] text-slate-400">
                       <span className="font-bold uppercase tracking-wider text-[8px] text-slate-400 mr-1">Created:</span>{' '}

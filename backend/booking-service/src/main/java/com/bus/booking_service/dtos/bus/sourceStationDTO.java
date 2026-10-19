@@ -1,19 +1,22 @@
 package com.bus.booking_service.dtos.bus;
 
-import lombok.Getter;
-
 import java.time.LocalTime;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
-@Getter
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class sourceStationDTO {
-    private final Long sourceStationId;
-    private final String stationName;
-    private final LocalTime arrivalTime;
+    private Long sourceStationId;
+    private String stationName;
+    private LocalTime arrivalTime;
 
     public sourceStationDTO(Long stationId, NormalUserBusResponseDto bus) {
         StationResponseDTO station = busDTO.getStationDTO(bus, stationId);
         this.sourceStationId = stationId;
-        this.stationName = station.getStationName();
-        this.arrivalTime = station.getArrivalTime();
+        this.stationName = station != null ? station.getStationName() : null;
+        this.arrivalTime = station != null ? station.getArrivalTime() : null;
     }
 }

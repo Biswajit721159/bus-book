@@ -25,21 +25,22 @@ const NAV_ITEMS_ADMIN: NavItem[] = [
     ),
   },
   {
-    label: 'Add Bus',
-    path: '/Buses/AddBus',
-    icon: (
-      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-      </svg>
-    ),
-  },
-  {
     label: 'Bookings',
     path: '/Bookings',
     icon: (
       <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
           d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+      </svg>
+    ),
+  },
+  {
+    label: 'Routes',
+    path: '/Routes',
+    icon: (
+      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+          d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
       </svg>
     ),
   },
@@ -87,10 +88,16 @@ export const Navbar: React.FC = () => {
 
   const isAdmin = otherUserinfo.role === ROLES.ADMIN;
   const navItems = isAdmin ? NAV_ITEMS_ADMIN : NAV_ITEMS_SUPERADMIN;
-  const panelLabel = isAdmin ? 'Admin Panel' : 'Super Admin';
+  const panelLabel = isAdmin ? 'Operator Portal' : 'Super Admin';
   const initials = user?.user?.fullName?.charAt(0)?.toUpperCase() || 'U';
 
-  const isActive = (path: string) => location.pathname === path;
+  const isActive = (path: string) => {
+    if (path === '/Dashboard') return location.pathname === '/Dashboard';
+    if (path === '/Dashboard/ManageUsers') {
+      return location.pathname === '/Dashboard/ManageUsers' || location.pathname === '/ManageUsers';
+    }
+    return location.pathname.startsWith(path);
+  };
 
   const handleLogout = () => {
     dispatch(Logout_User());
@@ -103,32 +110,32 @@ export const Navbar: React.FC = () => {
 
   return (
     <>
-      <header className="sticky top-0 z-40 bg-white/90 backdrop-blur-md border-b border-slate-200/80 shadow-sm">
+      <header className="sticky top-0 z-40 bg-blue-700 backdrop-blur-md border-b border-blue-600/40 shadow-xs">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-15 py-2.5">
+          <div className="flex items-center justify-between h-14">
 
             {/* Brand */}
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2.5">
               <button
                 type="button"
                 onClick={() => setDrawerOpen(true)}
-                className="btn-icon lg:hidden"
+                className="inline-flex items-center justify-center w-8 h-8 rounded-lg text-white hover:bg-white/15 bg-white/10 border border-white/20 transition-all duration-150 active:scale-95 lg:hidden"
                 aria-label="Open menu"
               >
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
                 </svg>
               </button>
               <button
                 type="button"
                 onClick={() => navigate('/Dashboard')}
-                className="flex items-center gap-2.5 group"
+                className="flex items-center gap-2 group"
               >
-                <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-primary-600 to-primary-700 flex items-center justify-center shadow-sm group-hover:shadow-md transition-shadow">
-                  <img src={logo} alt="logo" className="h-5 w-5 rounded object-cover" />
+                <div className="w-7 h-7 rounded-lg bg-white flex items-center justify-center shadow-xs group-hover:scale-105 transition-transform">
+                  <img src={logo} alt="logo" className="h-4 w-4 rounded object-cover" />
                 </div>
                 <div className="hidden sm:block">
-                  <span className="text-sm font-bold text-slate-900">{panelLabel}</span>
+                  <span className="text-xs font-bold text-white tracking-tight">{panelLabel}</span>
                 </div>
               </button>
             </div>
@@ -140,10 +147,10 @@ export const Navbar: React.FC = () => {
                   key={item.path}
                   type="button"
                   onClick={() => navigate(item.path)}
-                  className={`flex items-center gap-2 px-3.5 py-2 text-sm font-semibold rounded-xl transition-all duration-150 ${
+                  className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg transition-all duration-150 ${
                     isActive(item.path)
-                      ? 'bg-primary-50 text-primary-700 shadow-sm'
-                      : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+                      ? 'bg-white/20 text-white shadow-xs ring-1 ring-white/30 backdrop-blur-sm'
+                      : 'text-blue-100 hover:bg-white/10 hover:text-white'
                   }`}
                 >
                   {item.icon}
@@ -158,16 +165,16 @@ export const Navbar: React.FC = () => {
               <button
                 type="button"
                 onClick={() => navigate('/Settings')}
-                className="hidden sm:flex items-center gap-2.5 px-3 py-1.5 rounded-xl bg-slate-50 border border-slate-200 hover:bg-primary-50 hover:border-primary-200 transition-all duration-150 group"
+                className="hidden sm:flex items-center gap-2 px-2.5 py-1 rounded-lg bg-white/10 border border-white/20 hover:bg-white/20 transition-all duration-150 group"
               >
-                <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-primary-500 to-primary-700 flex items-center justify-center shadow-sm">
-                  <span className="text-xs font-bold text-white">{initials}</span>
+                <div className="w-6 h-6 rounded-md bg-white text-blue-700 flex items-center justify-center shadow-xs font-bold text-[11px]">
+                  <span>{initials}</span>
                 </div>
                 <div className="hidden md:block text-left">
-                  <p className="text-xs font-bold text-slate-800 max-w-[120px] truncate leading-tight">
+                  <p className="text-xs font-bold text-white max-w-[120px] truncate leading-tight">
                     {user?.user?.fullName}
                   </p>
-                  <p className="text-[10px] text-slate-500 capitalize">{isAdmin ? 'Bus Admin' : 'Super Admin'}</p>
+                  <p className="text-[9px] text-blue-100 capitalize">{isAdmin ? 'Bus Admin' : 'Super Admin'}</p>
                 </div>
               </button>
 
@@ -175,7 +182,7 @@ export const Navbar: React.FC = () => {
               <button
                 type="button"
                 onClick={handleLogout}
-                className="flex items-center gap-2 px-3 py-2 text-sm font-semibold text-slate-500 rounded-xl hover:bg-red-50 hover:text-red-600 transition-all duration-150"
+                className="flex items-center gap-2 px-3 py-2 text-sm font-semibold text-blue-100 rounded-xl hover:bg-white/10 hover:text-white transition-all duration-150"
                 title="Logout"
               >
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -198,14 +205,14 @@ export const Navbar: React.FC = () => {
             onClick={(e) => e.stopPropagation()}
           >
             {/* Drawer Header */}
-            <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
+            <div className="flex items-center justify-between px-5 py-4 bg-blue-700 border-b border-blue-600/30 text-white">
               <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-primary-600 to-primary-700 flex items-center justify-center">
+                <div className="w-8 h-8 rounded-xl bg-white flex items-center justify-center shadow-sm">
                   <img src={logo} alt="logo" className="h-5 w-5 object-cover" />
                 </div>
-                <span className="font-bold text-slate-900">{panelLabel}</span>
+                <span className="font-bold text-white">{panelLabel}</span>
               </div>
-              <button type="button" onClick={() => setDrawerOpen(false)} className="btn-icon text-slate-400">
+              <button type="button" onClick={() => setDrawerOpen(false)} className="inline-flex items-center justify-center w-8 h-8 rounded-lg text-white/80 hover:text-white hover:bg-white/10 transition-colors">
                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
@@ -236,11 +243,11 @@ export const Navbar: React.FC = () => {
                   onClick={() => { navigate(item.path); setDrawerOpen(false); }}
                   className={`w-full flex items-center gap-3 px-3.5 py-2.5 text-sm font-semibold rounded-xl mb-1 transition-all ${
                     isActive(item.path)
-                      ? 'bg-primary-50 text-primary-700'
+                      ? 'bg-blue-50 text-blue-700 font-semibold'
                       : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
                   }`}
                 >
-                  <span className={isActive(item.path) ? 'text-primary-600' : 'text-slate-400'}>
+                  <span className={isActive(item.path) ? 'text-blue-600' : 'text-slate-400'}>
                     {item.icon}
                   </span>
                   {item.label}
@@ -257,7 +264,7 @@ export const Navbar: React.FC = () => {
               >
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                    d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3y 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                    d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                 </svg>
                 Logout
               </button>

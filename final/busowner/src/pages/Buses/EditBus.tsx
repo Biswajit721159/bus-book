@@ -3,8 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { useEditBus } from './hooks/useEditBus';
 import { convertUtcToIst } from '../../utils/helpers';
 import { STATUS_OPTIONS } from '../../utils/constants';
-import FullPageLoader from '../../components/common/FullPageLoader';
 import InputField from '../../components/forms/InputField';
+import { calculateEstimatedArrival, getQuickOffsetTimes } from './utils/timeSuggestion';
 
 export const EditBus: React.FC = () => {
   const navigate = useNavigate();
@@ -70,7 +70,7 @@ export const EditBus: React.FC = () => {
                       className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-sm font-semibold border transition-all ${
                         data.status === value
                           ? activeCls + ' border-transparent'
-                          : 'border-slate-200 text-slate-600 bg-white hover:border-slate-350 shadow-sm'
+                          : 'border-slate-200 text-slate-600 bg-white hover:border-slate-300 shadow-sm'
                       }`}
                     >
                       <span className={`w-2 h-2 rounded-full ${data.status === value ? dotActive : dotInactive}`} />
@@ -111,7 +111,7 @@ export const EditBus: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => removeStation(index)}
-                    className="btn-icon text-red-400 hover:text-red-650 hover:bg-red-50 p-1.5 rounded-lg"
+                    className="btn-icon text-red-400 hover:text-red-600 hover:bg-red-50 p-1.5 rounded-lg"
                   >
                     <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -144,6 +144,41 @@ export const EditBus: React.FC = () => {
                     min="0"
                   />
                 </div>
+
+                {index > 0 && (() => {
+                  const prevStation = data.station_data?.[index - 1];
+                  const est = prevStation?.arrived_time && Number(station.Distance_from_Previous_Station) > 0
+                    ? calculateEstimatedArrival(prevStation.arrived_time, Number(station.Distance_from_Previous_Station))
+                    : null;
+                  const offsets = prevStation?.arrived_time ? getQuickOffsetTimes(prevStation.arrived_time).slice(0, 4) : [];
+
+                  if (!prevStation?.arrived_time) return null;
+
+                  return (
+                    <div className="flex flex-wrap items-center gap-1.5 mt-2.5 pt-2 border-t border-slate-200/60 text-xs">
+                      {est && (
+                        <button
+                          type="button"
+                          onClick={() => handleStationChange(index, { target: { name: 'arrived_time', value: est.arrivalTime } } as any)}
+                          className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 font-bold text-[11px]"
+                        >
+                          <span>⚡ Est. Arrival: {est.arrivalTime} ({est.formattedDuration})</span>
+                        </button>
+                      )}
+                      <span className="text-[10px] text-slate-400 font-medium">Quick:</span>
+                      {offsets.map((o) => (
+                        <button
+                          key={o.label}
+                          type="button"
+                          onClick={() => handleStationChange(index, { target: { name: 'arrived_time', value: o.time } } as any)}
+                          className="px-1.5 py-0.5 rounded border border-slate-200 bg-white text-slate-600 hover:bg-blue-50 hover:text-blue-600 text-[10px] font-semibold"
+                        >
+                          {o.label} ({o.time})
+                        </button>
+                      ))}
+                    </div>
+                  );
+                })()}
               </div>
             ))}
           </div>
@@ -170,8 +205,6 @@ export const EditBus: React.FC = () => {
           </button>
         </div>
       </form>
-
-      <FullPageLoader open={isLoading} />
     </div>
   );
 };

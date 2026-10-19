@@ -13,6 +13,9 @@ export interface Bus {
   status: 'pending' | 'approved' | 'rejected';
   createdAt: string;
   updatedAt: string;
+  active?: boolean;
+  averageRating?: number | null;
+  totalReviewsCount?: number;
 }
 
 export interface BusQuery {

@@ -19,4 +19,13 @@ const getIsReview = async (id) => {
 	}
 };
 
-export { addReview, getIsReview };
+const getReviewsByBus = async (busId, page = 1, size = 5) => {
+	try {
+		const response = await axiosInstance.get(`/api/review/bus/${busId}?page=${page}&size=${size}`);
+		return response.data;
+	} catch (error) {
+		throw new Error(getErrorMessageFromError(error));
+	}
+};
+
+export { addReview, getIsReview, getReviewsByBus };

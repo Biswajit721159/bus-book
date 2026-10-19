@@ -9,9 +9,6 @@ public class StationInternalDTO {
 
     @Override
     public String toString() {
-        return "StationInternalDTO{" +
-                "id=" + id +
-                ", stationName='" + stationName + '\'' +
-                '}';
+        return "StationInternalDTO{" + "id=" + id + ", stationName='" + stationName + '\'' + '}';
     }
 }

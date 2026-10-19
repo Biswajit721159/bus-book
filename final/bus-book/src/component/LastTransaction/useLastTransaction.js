@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { toast } from "react-toastify";
 import { getBookingDetails } from "../../apis/booking";
 import { addWishList, removeWishList } from "../../apis/wishlist";
@@ -9,12 +10,15 @@ export const useLastTransaction = () => {
 	const [wishlistLoader, setWishlistLoader] = useState(false);
 	const [wishListId, setWishListId] = useState();
 	const [totalPage, setTotalPage] = useState(1);
-	const [currentPage, setCurrentPage] = useState(1);
+	const [searchParams, setSearchParams] = useSearchParams();
+	const [showWishlistOnly, setShowWishlistOnly] = useState(false);
+
+	const currentPage = Math.max(1, parseInt(searchParams.get("page") || "1", 10));
 
 	const loadTicket = async (page = 1) => {
 		try {
 			setLoad(true);
-			const res = await getBookingDetails(page);
+			const res = await getBookingDetails(page, showWishlistOnly);
 
 			const bookings =
 				res?.data?.bookingData || res?.data?.content || (Array.isArray(res?.data) ? res.data : []);
@@ -30,8 +34,9 @@ export const useLastTransaction = () => {
 	};
 
 	useEffect(() => {
-		loadTicket();
-	}, []);
+		loadTicket(currentPage);
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [currentPage, showWishlistOnly]);
 
 	const addToWishList = async (id, isWishlisted) => {
 		if (wishlistLoader) return;
@@ -64,8 +69,11 @@ export const useLastTransaction = () => {
 	};
 
 	const changePage = (page) => {
-		setCurrentPage(page);
-		loadTicket(page);
+		setSearchParams((prev) => {
+			const next = new URLSearchParams(prev);
+			next.set("page", page);
+			return next;
+		});
 	};
 
 	return {
@@ -77,5 +85,7 @@ export const useLastTransaction = () => {
 		currentPage,
 		addToWishList,
 		changePage,
+		showWishlistOnly,
+		setShowWishlistOnly,
 	};
 };

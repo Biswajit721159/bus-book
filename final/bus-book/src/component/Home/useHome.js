@@ -9,7 +9,7 @@ export const useHome = () => {
 	const date = useSelector((state) => state.BusSearch.date);
 	const src = useSelector((state) => state.BusSearch.src);
 	const dist = useSelector((state) => state.BusSearch.dist);
-	const { Bus, station, loadingBus, loadingStation } = useSelector((state) => state.Bus);
+	const { Bus, station, loadingBus, loadingStation, busLoaded, stationLoaded } = useSelector((state) => state.Bus);
 
 	const [busState, setBusState] = useState({
 		bus__id: "",
@@ -19,14 +19,17 @@ export const useHome = () => {
 	});
 
 	useEffect(() => {
-		if (Bus?.length === 0 && src?.length !== 0 && dist?.length !== 0) {
-			dispatch(fetchBusData({ source: src, dist }));
-		} else if (Bus?.length === 0) {
-			dispatch(loadBus());
+		if (!busLoaded && !loadingBus) {
+			if (src?.length !== 0 && dist?.length !== 0) {
+				dispatch(fetchBusData({ source: src, dist }));
+			} else {
+				dispatch(loadBus());
+			}
 		}
-		if (station?.length === 0) dispatch(loadStation());
-		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [dispatch]);
+		if (!stationLoaded && !loadingStation) {
+			dispatch(loadStation());
+		}
+	}, [dispatch, busLoaded, loadingBus, stationLoaded, loadingStation, src, dist]);
 
 	const showSeat = async (busId, srcStation, distStation) => {
 		if (date.length < 10) {

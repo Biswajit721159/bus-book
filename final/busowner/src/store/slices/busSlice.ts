@@ -2,11 +2,9 @@ import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { Bus, BusQuery } from '../../types/bus';
 import { API_BASE_URL } from '../../utils/constants';
+import { mapBackendToBus } from '../../services/apiService';
 
 interface BusState {
-  pendingBuss: Bus[];
-  approvedBuss: Bus[];
-  rejectedBuss: Bus[];
   isPending: boolean;
   isApproved: boolean;
   isRejected: boolean;
@@ -15,9 +13,6 @@ interface BusState {
 }
 
 const initialState: BusState = {
-  pendingBuss: [],
-  approvedBuss: [],
-  rejectedBuss: [],
   isPending: true,
   isApproved: false,
   isRejected: false,
@@ -50,29 +45,12 @@ const busSlice = createSlice({
     setCurrentPage: (state, action: PayloadAction<number>) => {
       state.currentPage = action.payload;
     },
-    addPendingBus: (state, action: PayloadAction<Bus>) => {
-      state.pendingBuss.push(action.payload);
-    },
-    addApprovedBus: (state, action: PayloadAction<Bus>) => {
-      state.approvedBuss.push(action.payload);
-    },
-    addRejectedBus: (state, action: PayloadAction<Bus>) => {
-      state.rejectedBuss.push(action.payload);
-    },
-    removePendingBus: (state, action: PayloadAction<number>) => {
-      state.pendingBuss.splice(action.payload, 1);
-    },
-    removeApprovedBus: (state, action: PayloadAction<number>) => {
-      state.approvedBuss.splice(action.payload, 1);
-    },
-    removeRejectedBus: (state, action: PayloadAction<number>) => {
-      state.rejectedBuss.splice(action.payload, 1);
-    },
   },
 });
 
 export const busApiSlice = createApi({
   reducerPath: 'busApi',
+  tagTypes: ['Bus'],
   baseQuery: fetchBaseQuery({
     baseUrl: API_BASE_URL,
     prepareHeaders: (headers) => {
@@ -97,30 +75,21 @@ export const busApiSlice = createApi({
         method: 'POST',
         body: { page, approved, pending, rejected }
       }),
-      transformResponse: (response: any) => {
-        const mapBackendBusToFrontend = (bus: any): Bus => ({
-          _id: String(bus.id),
-          bus_name: bus.busName,
-          Total_seat: bus.totalSeat,
-          status: bus.status ? bus.status.toLowerCase() as any : 'pending',
-          email: bus.email || '',
-          createdAt: bus.createdAt || '',
-          updatedAt: bus.updatedAt || '',
-          station_data: (bus.stations || []).map((st: any) => ({
-            station: st.stationName,
-            arrived_time: st.arrivalTime,
-            Distance_from_Previous_Station: st.distanceFromLastStation,
-          })),
-        });
-        return {
-          statusCode: response.status || response.statusCode || 200,
-          message: response.message || 'Buses fetched',
-          data: {
-            totalPage: response.data?.totalPage || 1,
-            result: (response.data?.result || []).map(mapBackendBusToFrontend)
-          }
-        };
-      }
+      providesTags: (result) =>
+        result?.data?.result
+          ? [
+              ...result.data.result.map(({ _id }) => ({ type: 'Bus' as const, id: _id })),
+              { type: 'Bus' as const, id: 'LIST' },
+            ]
+          : [{ type: 'Bus' as const, id: 'LIST' }],
+      transformResponse: (response: any) => ({
+        statusCode: response.status || response.statusCode || 200,
+        message: response.message || 'Buses fetched',
+        data: {
+          totalPage: response.data?.totalPage || 1,
+          result: (response.data?.result || []).map(mapBackendToBus)
+        }
+      })
     }),
   }),
 });
@@ -133,12 +102,6 @@ export const {
   setIsRejected,
   setTotalPages,
   setCurrentPage,
-  addPendingBus,
-  addApprovedBus,
-  addRejectedBus,
-  removePendingBus,
-  removeApprovedBus,
-  removeRejectedBus,
 } = busSlice.actions;
 
 export default busSlice.reducer;

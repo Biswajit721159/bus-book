@@ -3,10 +3,10 @@ import { Link } from "react-router-dom";
 
 const EmptyBookingState = () => {
 	return (
-		<div className="flex flex-col items-center justify-center py-20 text-center bg-white border border-surface-200 rounded-2xl p-8 shadow-sm">
-			<div className="w-16 h-16 bg-primary-50 text-primary-600 rounded-full flex items-center justify-center mb-5 animate-bounce">
+		<div className="flex flex-col items-center justify-center py-20 text-center bg-white border border-surface-200 rounded-2xl p-8 shadow-xs">
+			<div className="w-16 h-16 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center mb-5 border border-blue-100 shadow-xs">
 				<svg
-					className="w-8 h-8"
+					className="w-8 h-8 text-blue-600"
 					fill="none"
 					viewBox="0 0 24 24"
 					stroke="currentColor"
@@ -14,16 +14,27 @@ const EmptyBookingState = () => {
 					<path
 						strokeLinecap="round"
 						strokeLinejoin="round"
-						strokeWidth={1.5}
-						d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+						strokeWidth={1.8}
+						d="M8 7h8m-8 4h8m-8 4h5M5 3h14a2 2 0 012 2v14a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2z"
 					/>
 				</svg>
 			</div>
-			<h3 className="text-xl font-bold text-surface-900 mb-2">No bookings yet</h3>
+			<h3 className="text-xl font-bold text-surface-900 mb-2">No bookings found</h3>
 			<p className="text-surface-500 text-sm mb-6 max-w-sm leading-relaxed">
-				You haven't made any bookings yet. Start by exploring our bus operator routes and book your first journey today!
+				You haven't made any bus reservations yet. Explore bus routes and book your first journey today!
 			</p>
-			<Link to="/book-bus" className="btn-primary px-5 py-2.5 rounded-lg text-sm font-semibold shadow-sm hover:bg-primary-700">
+			<Link
+				to="/book-bus"
+				className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm shadow-sm hover:shadow-md transition-all active:scale-95"
+			>
+				<svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+					<path
+						strokeLinecap="round"
+						strokeLinejoin="round"
+						strokeWidth={2}
+						d="M8 7h8m-8 4h8m-8 4h5M5 3h14a2 2 0 012 2v14a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2z"
+					/>
+				</svg>
 				Book a Bus
 			</Link>
 		</div>
@@ -31,3 +42,4 @@ const EmptyBookingState = () => {
 };
 
 export default EmptyBookingState;
+

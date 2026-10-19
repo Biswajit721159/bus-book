@@ -1,22 +1,19 @@
 package com.email.notifications.services;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.Map;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
 
-import java.util.Map;
-
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class EmailConsumerService {
 
-    @Autowired
-    private EmailService emailService;
-
-    @Autowired
-    private ObjectMapper objectMapper;
+    private final EmailService emailService;
+    private final ObjectMapper objectMapper;
 
     @KafkaListener(topics = "welcome-email-topic", groupId = "notification-group")
     public void consumeWelcomeEmail(String message) {
@@ -29,7 +26,8 @@ public class EmailConsumerService {
             String htmlBody = emailService.buildWelcomeEmail(name, email);
             emailService.sendHtmlEmail(email, "Welcome to BusBooking!", htmlBody);
         } catch (Exception e) {
-            log.error("Error processing welcome email event", e);
+            log.error("Error processing welcome email event: {}", message, e);
+            throw new RuntimeException("Failed to process welcome email", e);
         }
     }
 
@@ -48,7 +46,8 @@ public class EmailConsumerService {
             String htmlBody = emailService.buildOtpEmail(name, otp, purpose, expiryMinutes);
             emailService.sendHtmlEmail(email, "OTP Verification - BusBooking", htmlBody);
         } catch (Exception e) {
-            log.error("Error processing OTP email event", e);
+            log.error("Error processing OTP email event: {}", message, e);
+            throw new RuntimeException("Failed to process OTP email", e);
         }
     }
 
@@ -61,6 +60,7 @@ public class EmailConsumerService {
             String email = (String) payload.get("email");
             Number bookingIdNum = (Number) payload.get("bookingId");
             Long bookingId = bookingIdNum != null ? bookingIdNum.longValue() : null;
+            String pnrNumber = (String) payload.get("pnrNumber");
             String busName = (String) payload.get("busName");
             String source = (String) payload.get("source");
             String destination = (String) payload.get("destination");
@@ -68,10 +68,15 @@ public class EmailConsumerService {
             String amount = (String) payload.get("amount");
             String passengerSeatsHtml = (String) payload.get("passengerSeatsHtml");
 
-            String htmlBody = emailService.buildTicketEmail(name, bookingId, busName, source, destination, journeyDate, amount, passengerSeatsHtml);
-            emailService.sendHtmlEmail(email, "Booking Confirmation - Ticket #" + bookingId, htmlBody);
+            String htmlBody = emailService.buildTicketEmail(name, bookingId, pnrNumber, busName, source, destination, journeyDate, amount,
+                    passengerSeatsHtml);
+
+            String displayRef = (pnrNumber != null && !pnrNumber.isBlank()) ? "PNR: " + pnrNumber : "Ticket #" + bookingId;
+            emailService.sendHtmlEmail(email, "Booking Confirmation - " + displayRef, htmlBody);
+
         } catch (Exception e) {
-            log.error("Error processing booking email event", e);
+            log.error("Error processing booking email event: {}", message, e);
+            throw new RuntimeException("Failed to process booking email", e);
         }
     }
 }

@@ -129,7 +129,7 @@ export default function Login() {
 
 	return (
 		<>
-			{isGoogleVerifying && <Loader text="Verifying Google account..." />}
+			{isGoogleVerifying && <Loader overlay={true} text="Verifying Google account..." />}
 			<div className="min-h-[calc(100vh-64px)] flex items-center justify-center px-4 py-12 bg-surface-50">
 			<div className="w-full max-w-md">
 				<div className="text-center mb-8">

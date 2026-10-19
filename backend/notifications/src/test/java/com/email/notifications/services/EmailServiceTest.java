@@ -1,5 +1,12 @@
 package com.email.notifications.services;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
 import jakarta.mail.internet.MimeMessage;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -8,11 +15,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.mail.javamail.JavaMailSender;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
 @SpringBootTest
 public class EmailServiceTest {
@@ -38,6 +40,14 @@ public class EmailServiceTest {
     }
 
     @Test
+    void testSendHtmlEmail_Failure_ThrowsRuntimeException() {
+        doThrow(new org.springframework.mail.MailSendException("SMTP error")).when(javaMailSender).send(any(MimeMessage.class));
+
+        assertThatThrownBy(() -> emailService.sendHtmlEmail("fail@example.com", "Subject", "<p>Hello</p>")).isInstanceOf(
+                RuntimeException.class).hasMessageContaining("Failed to send email to fail@example.com");
+    }
+
+    @Test
     void testBuildWelcomeEmail() {
         String rendered = emailService.buildWelcomeEmail("John Doe", "john@example.com");
         assertThat(rendered).contains("John Doe");
@@ -55,18 +65,11 @@ public class EmailServiceTest {
 
     @Test
     void testBuildTicketEmail() {
-        String rendered = emailService.buildTicketEmail(
-                "John Doe",
-                100L,
-                "Express Bus",
-                "New York",
-                "Boston",
-                "2026-07-01",
-                "$50",
-                "<li>Seat 12A</li>"
-        );
+        String rendered = emailService.buildTicketEmail("John Doe", 100L, "5829104", "Express Bus", "New York", "Boston", "2026-07-01",
+                "$50", "<li>Seat 12A</li>");
         assertThat(rendered).contains("John Doe");
         assertThat(rendered).contains("100");
+        assertThat(rendered).contains("5829104");
         assertThat(rendered).contains("Express Bus");
         assertThat(rendered).contains("New York");
         assertThat(rendered).contains("Boston");

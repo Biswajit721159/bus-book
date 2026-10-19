@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { useAddBus } from './hooks/useAddBus';
 import BusDetailsForm from './components/BusDetailsForm';
 import StationForm from './components/StationForm';
-import FullPageLoader from '../../components/common/FullPageLoader';
 
 export const AddBus: React.FC = () => {
   const navigate = useNavigate();
@@ -31,8 +30,8 @@ export const AddBus: React.FC = () => {
           </svg>
         </button>
         <div>
-          <h1 className="page-title">Add New Bus</h1>
-          <p className="text-sm text-slate-500">Fill in bus details and define the route stations</p>
+          <h1 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">Add New Bus</h1>
+          <p className="text-xs text-slate-500 font-medium">Fill in bus details and define the route stations</p>
         </div>
       </div>
 
@@ -58,7 +57,7 @@ export const AddBus: React.FC = () => {
                   i + 1
                 )}
               </div>
-              <span className={`text-sm font-medium ${step === i + 1 ? 'text-slate-800' : 'text-slate-400'}`}>
+              <span className={`text-xs font-bold ${step === i + 1 ? 'text-slate-800' : 'text-slate-400'}`}>
                 {label}
               </span>
             </div>
@@ -76,54 +75,55 @@ export const AddBus: React.FC = () => {
 
       {step === 2 && (
         <div className="space-y-4 animate-fade-in">
-          <div className="card p-4 flex items-center gap-4 bg-indigo-50/50 border border-indigo-100 rounded-2xl">
-            <div className="w-10 h-10 rounded-xl bg-indigo-100 flex items-center justify-center">
+          <div className="p-4 flex items-center gap-4 bg-indigo-50/50 border border-indigo-100 rounded-2xl shadow-xs">
+            <div className="w-9 h-9 rounded-xl bg-indigo-100 text-indigo-700 flex items-center justify-center font-bold">
               <svg className="w-5 h-5 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
               </svg>
             </div>
             <div>
-              <p className="font-semibold text-slate-850">{busName}</p>
-              <p className="text-sm text-slate-500">
+              <p className="font-bold text-xs text-slate-900">{busName}</p>
+              <p className="text-[11px] text-slate-500 font-medium">
                 {totalSeats} seats · {stationList.length} station{stationList.length !== 1 ? 's' : ''} added
               </p>
             </div>
-            <button type="button" onClick={() => setStep(1)} className="ml-auto text-xs font-semibold text-indigo-600 hover:underline">
+            <button type="button" onClick={() => setStep(1)} className="ml-auto text-xs font-bold text-indigo-600 hover:text-indigo-800 hover:underline">
               Edit Details
             </button>
           </div>
 
           {stationList.length > 0 && (
-            <div className="card overflow-hidden rounded-2xl border border-slate-100 shadow-md bg-white">
-              <div className="card-header flex items-center justify-between p-4 border-b border-slate-50">
-                <h3 className="section-title text-base font-semibold">Route Stations</h3>
-                <span className="text-xs text-slate-400 font-medium">
+            <div className="overflow-hidden rounded-2xl border border-slate-200/90 shadow-sm bg-white">
+              <div className="flex items-center justify-between p-3.5 border-b border-slate-100 bg-slate-50/60">
+                <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider">Route Stations</h3>
+                <span className="text-[11px] text-slate-400 font-medium">
                   {stationList.length} station{stationList.length !== 1 ? 's' : ''}
                 </span>
               </div>
               <div className="overflow-x-auto">
-                <table className="data-table w-full">
+                <table className="w-full text-left border-collapse">
                   <thead>
-                    <tr>
-                      <th className="px-4 py-3 text-left text-xs font-semibold text-slate-550">#</th>
-                      <th className="px-4 py-3 text-left text-xs font-semibold text-slate-550">Station</th>
-                      <th className="px-4 py-3 text-left text-xs font-semibold text-slate-550">Arrival Time</th>
-                      <th className="px-4 py-3 text-left text-xs font-semibold text-slate-550">Distance (km)</th>
-                      <th className="px-4 py-3"></th>
+                    <tr className="border-b border-slate-200/80 bg-slate-50/80">
+                      <th className="py-2.5 px-3 text-[10px] font-bold text-slate-400 uppercase tracking-wider w-10 text-center">#</th>
+                      <th className="py-2.5 px-3 text-[10px] font-bold text-slate-500 uppercase tracking-wider">Station</th>
+                      <th className="py-2.5 px-3 text-[10px] font-bold text-slate-500 uppercase tracking-wider">Arrival Time</th>
+                      <th className="py-2.5 px-3 text-[10px] font-bold text-slate-500 uppercase tracking-wider">Distance</th>
+                      <th className="py-2.5 px-3 text-[10px] font-bold text-slate-500 uppercase tracking-wider text-right">Action</th>
                     </tr>
                   </thead>
-                  <tbody>
+                  <tbody className="divide-y divide-slate-100">
                     {stationList.map((item, idx) => (
-                      <tr key={idx} className="border-t border-slate-100 hover:bg-slate-50/50">
-                        <td className="px-4 py-3 text-slate-400 font-medium">{idx + 1}</td>
-                        <td className="px-4 py-3 font-semibold text-slate-805">{item.station}</td>
-                        <td className="px-4 py-3 text-slate-600 font-medium">{item.arrived_time}</td>
-                        <td className="px-4 py-3 text-slate-600 font-medium">{item.Distance_from_Previous_Station} km</td>
-                        <td className="px-4 py-3 text-right">
+                      <tr key={idx} className="hover:bg-blue-50/30 transition-colors">
+                        <td className="py-2.5 px-3 text-center font-bold text-[11px] text-slate-400">{idx + 1}</td>
+                        <td className="py-2.5 px-3 font-bold text-xs text-slate-900">{item.station}</td>
+                        <td className="py-2.5 px-3 text-xs font-semibold text-slate-700">{item.arrived_time}</td>
+                        <td className="py-2.5 px-3 text-xs font-medium text-slate-600">{item.Distance_from_Previous_Station} km</td>
+                        <td className="py-2.5 px-3 text-right">
                           <button
                             type="button"
                             onClick={() => deleteStation(idx)}
-                            className="btn-icon text-red-400 hover:text-red-650 hover:bg-red-50 p-1.5 rounded-lg"
+                            className="p-1 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer"
+                            title="Remove Station"
                           >
                             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -139,7 +139,12 @@ export const AddBus: React.FC = () => {
           )}
 
           {!showSubmit ? (
-            <StationForm onAdd={addStationToList} isFirst={stationList.length === 0} />
+            <StationForm
+              onAdd={addStationToList}
+              isFirst={stationList.length === 0}
+              previousStation={stationList[stationList.length - 1]}
+              stationIndex={stationList.length + 1}
+            />
           ) : (
             <div className="card p-6 text-center bg-emerald-50/50 border border-emerald-100 rounded-2xl">
               <div className="w-12 h-12 rounded-full bg-emerald-100 flex items-center justify-center mx-auto mb-3">
@@ -175,8 +180,6 @@ export const AddBus: React.FC = () => {
           )}
         </div>
       )}
-
-      <FullPageLoader open={isLoading} />
     </div>
   );
 };

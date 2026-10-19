@@ -2,14 +2,13 @@ package com.booking.bus.dtos.bus;
 
 import com.booking.bus.entities.Bus;
 import com.booking.bus.entities.Station;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-
 import java.time.Duration;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Comparator;
 import java.util.List;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
 @NoArgsConstructor
@@ -22,15 +21,19 @@ public class BusSearchResponseDTO {
     private String departureTime;
     private String totalTime;
     private int totalDistance;
+    private Double averageRating;
+    private Long totalReviewsCount;
+    private Long totalRatingSum;
 
     public static BusSearchResponseDTO from(Bus bus, String source, String destination) {
         BusSearchResponseDTO dto = new BusSearchResponseDTO();
         dto.busId = String.valueOf(bus.getId());
         dto.busName = bus.getBusName();
+        dto.averageRating = bus.getAverageRating();
+        dto.totalReviewsCount = bus.getTotalReviewsCount();
+        dto.totalRatingSum = bus.getTotalRatingSum();
 
-        List<Station> sortedStations = bus.getStations().stream()
-                .sorted(Comparator.comparingInt(Station::getStationOrder))
-                .toList();
+        List<Station> sortedStations = bus.getStations().stream().sorted(Comparator.comparingInt(Station::getStationOrder)).toList();
 
         Station start = null;
         Station end = null;

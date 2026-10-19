@@ -1,10 +1,17 @@
 package com.bus.booking_service.services;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
 import com.bus.booking_service.dtos.BookingQueryDTO;
-import com.bus.booking_service.dtos.cancelTicketDTO;
 import com.bus.booking_service.dtos.bookings.BookingTicketResponseDTo;
 import com.bus.booking_service.dtos.bus.NormalUserBusResponseDto;
 import com.bus.booking_service.dtos.bus.StationResponseDTO;
+import com.bus.booking_service.dtos.cancelTicketDTO;
 import com.bus.booking_service.dtos.internal.BusInternalDTO;
 import com.bus.booking_service.dtos.internal.StationInternalDTO;
 import com.bus.booking_service.entities.BookingSeats;
@@ -20,24 +27,16 @@ import com.bus.booking_service.internals.userApi;
 import com.bus.booking_service.repository.BookingRepository;
 import com.bus.booking_service.repository.BookingSeatRepository;
 import com.bus.booking_service.repository.WishlistRepository;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.anyList;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
 class BookingServiceTest {
@@ -59,6 +58,9 @@ class BookingServiceTest {
 
     @Mock
     private WishlistService wishlistService;
+
+    @Mock
+    private BookingCacheService bookingCacheService;
 
     @InjectMocks
     private BookingService bookingService;
@@ -119,14 +121,74 @@ class BookingServiceTest {
     }
 
     @Test
+    void fetchBookingsPaginationFiltersByPnr() {
+        User admin = user(1L, Role.SUPER_ADMIN);
+        Bookings booking1 = booking(21L, 5L, 101L, BookingStatus.CONFIRMED, LocalDateTime.of(2026, 8, 10, 9, 0));
+        booking1.setPnrNumber("PNR-MATCH-123");
+        Bookings booking2 = booking(22L, 6L, 101L, BookingStatus.CONFIRMED, LocalDateTime.of(2026, 8, 10, 9, 0));
+        booking2.setPnrNumber("PNR-OTHER-999");
+
+        when(bookingRepository.findAllByOrderByCreatedAtDesc()).thenReturn(List.of(booking1, booking2));
+        when(bookingSeatRepository.findSeatDetailsByBookingId(21L)).thenReturn(List.of());
+        when(bookingSeatRepository.findSeatDetailsByBookingId(22L)).thenReturn(List.of());
+        when(busApi.fetchBusDetailsInternal(101L)).thenReturn(busDetails());
+
+        BookingQueryDTO query = new BookingQueryDTO();
+        query.setCurrentPage(1);
+        query.setPnr("match-123");
+
+        Map<String, Object> result = bookingService.fetchBookingsPagination(query, admin);
+        assertThat((List<?>) result.get("bookingData")).hasSize(1);
+    }
+
+    @Test
+    void fetchBookingsPaginationFiltersByBookingId() {
+        User admin = user(1L, Role.SUPER_ADMIN);
+        Bookings booking1 = booking(21L, 5L, 101L, BookingStatus.CONFIRMED, LocalDateTime.of(2026, 8, 10, 9, 0));
+        Bookings booking2 = booking(22L, 6L, 101L, BookingStatus.CONFIRMED, LocalDateTime.of(2026, 8, 10, 9, 0));
+
+        when(bookingRepository.findAllByOrderByCreatedAtDesc()).thenReturn(List.of(booking1, booking2));
+        when(bookingSeatRepository.findSeatDetailsByBookingId(21L)).thenReturn(List.of());
+        when(bookingSeatRepository.findSeatDetailsByBookingId(22L)).thenReturn(List.of());
+        when(busApi.fetchBusDetailsInternal(101L)).thenReturn(busDetails());
+
+        BookingQueryDTO query = new BookingQueryDTO();
+        query.setCurrentPage(1);
+        query.setBookingId("21");
+
+        Map<String, Object> result = bookingService.fetchBookingsPagination(query, admin);
+        assertThat((List<?>) result.get("bookingData")).hasSize(1);
+    }
+
+    @Test
+    void fetchBookingsPaginationFiltersBySearchKeyword() {
+        User admin = user(1L, Role.SUPER_ADMIN);
+        Bookings booking1 = booking(21L, 5L, 101L, BookingStatus.CONFIRMED, LocalDateTime.of(2026, 8, 10, 9, 0));
+        booking1.setPnrNumber("SPECIAL-PNR");
+        Bookings booking2 = booking(22L, 6L, 101L, BookingStatus.CONFIRMED, LocalDateTime.of(2026, 8, 10, 9, 0));
+        booking2.setPnrNumber("COMMON-PNR");
+
+        when(bookingRepository.findAllByOrderByCreatedAtDesc()).thenReturn(List.of(booking1, booking2));
+        when(bookingSeatRepository.findSeatDetailsByBookingId(21L)).thenReturn(List.of());
+        when(bookingSeatRepository.findSeatDetailsByBookingId(22L)).thenReturn(List.of());
+        when(busApi.fetchBusDetailsInternal(101L)).thenReturn(busDetails());
+
+        BookingQueryDTO query = new BookingQueryDTO();
+        query.setCurrentPage(1);
+        query.setSearch("special");
+
+        Map<String, Object> result = bookingService.fetchBookingsPagination(query, admin);
+        assertThat((List<?>) result.get("bookingData")).hasSize(1);
+    }
+
+    @Test
     void updateCancelTicketRejectsMissingSeats() {
         cancelTicketDTO request = new cancelTicketDTO();
         request.setSeatTicket(List.of(1L, 2L));
         when(bookingSeatRepository.findAllById(List.of(1L, 2L))).thenReturn(List.of());
 
-        assertThatThrownBy(() -> bookingService.updateCancelTicket(request, user(9L, Role.NORMAL_USER)))
-                .isInstanceOf(BadRequestException.class)
-                .hasMessageContaining("Some seats were not found");
+        assertThatThrownBy(() -> bookingService.updateCancelTicket(request, user(9L, Role.NORMAL_USER))).isInstanceOf(
+                BadRequestException.class).hasMessageContaining("Some seats were not found");
     }
 
     @Test
@@ -135,12 +197,15 @@ class BookingServiceTest {
         Bookings booking = booking(41L, 9L, 101L, BookingStatus.CONFIRMED, LocalDateTime.now().plusDays(2));
         BookingSeats seatOne = seat(1L, booking, 601L, 1, SeatStatus.CONFIRMED, 9L);
         BookingSeats seatTwo = seat(2L, booking, 602L, 2, SeatStatus.CONFIRMED, 9L);
+        booking.setSeats(List.of(seatOne, seatTwo));
         cancelTicketDTO request = new cancelTicketDTO();
         request.setSeatTicket(List.of(1L, 2L));
 
         when(bookingSeatRepository.findAllById(List.of(1L, 2L))).thenReturn(List.of(seatOne, seatTwo));
         when(bookingRepository.findById(41L)).thenReturn(Optional.of(booking));
+        when(bookingRepository.findBookingWithSeatsByIdAndCreatedBy(41L, 9L)).thenReturn(Optional.of(booking));
         when(bookingSeatRepository.findSeatDetailsByBookingId(41L)).thenReturn(List.of(seatOne, seatTwo));
+
         when(busApi.getBusById(101L)).thenReturn(normalBus());
         when(userApi.fetchMasterListUsers(List.of(601L, 602L))).thenReturn(List.of());
 
@@ -152,39 +217,65 @@ class BookingServiceTest {
         verify(bookingRepository).save(booking);
     }
 
+    @Test
+    void fetchBookingDataReturnsBookingsWithCorrectPagination() {
+        User user = user(9L, Role.NORMAL_USER);
+        Bookings booking = booking(41L, 9L, 101L, BookingStatus.CONFIRMED, LocalDateTime.now().plusDays(2));
+        BookingSeats seat = seat(1L, booking, 601L, 1, SeatStatus.CONFIRMED, 9L);
+        org.springframework.data.domain.Page<Bookings> page = new org.springframework.data.domain.PageImpl<>(List.of(booking),
+                org.springframework.data.domain.PageRequest.of(0, 10), 1);
+
+        when(bookingRepository.findByCreatedByOrderByCreatedAtDesc(org.mockito.ArgumentMatchers.eq(9L), org.mockito.ArgumentMatchers.any(
+                org.springframework.data.domain.Pageable.class))).thenReturn(page);
+        when(busApi.getBusById(101L)).thenReturn(normalBus());
+        when(bookingSeatRepository.findSeatDetailsByBookingId(41L)).thenReturn(List.of(seat));
+        when(userApi.fetchMasterListUsers(List.of(601L))).thenReturn(List.of());
+
+        com.bus.booking_service.dtos.bookings.BookingsResponse response = bookingService.fetchBookingData(user, 1, false);
+
+        assertThat(response).isNotNull();
+        assertThat(response.getBookingTicketResponseDTo()).hasSize(1);
+        assertThat(response.getTotalElements()).isEqualTo(1);
+        assertThat(response.isHasNext()).isFalse();
+    }
+
+    @Test
+    void fetchBookingDataQueriesWishlistedBookingsWhenWishListIsTrue() {
+        User user = user(9L, Role.NORMAL_USER);
+        Bookings booking = booking(41L, 9L, 101L, BookingStatus.CONFIRMED, LocalDateTime.now().plusDays(2));
+        BookingSeats seat = seat(1L, booking, 601L, 1, SeatStatus.CONFIRMED, 9L);
+        org.springframework.data.domain.Page<Bookings> page = new org.springframework.data.domain.PageImpl<>(List.of(booking),
+                org.springframework.data.domain.PageRequest.of(0, 10), 1);
+
+        when(bookingRepository.findWishlistedBookingsByUserId(org.mockito.ArgumentMatchers.eq(9L), org.mockito.ArgumentMatchers.any(
+                org.springframework.data.domain.Pageable.class))).thenReturn(page);
+        when(busApi.getBusById(101L)).thenReturn(normalBus());
+        when(bookingSeatRepository.findSeatDetailsByBookingId(41L)).thenReturn(List.of(seat));
+        when(userApi.fetchMasterListUsers(List.of(601L))).thenReturn(List.of());
+
+        com.bus.booking_service.dtos.bookings.BookingsResponse response = bookingService.fetchBookingData(user, 1, true);
+
+        assertThat(response).isNotNull();
+        assertThat(response.getBookingTicketResponseDTo()).hasSize(1);
+        verify(bookingRepository).findWishlistedBookingsByUserId(org.mockito.ArgumentMatchers.eq(9L), org.mockito.ArgumentMatchers.any(
+                org.springframework.data.domain.Pageable.class));
+        verify(bookingRepository, never()).findByCreatedByOrderByCreatedAtDesc(org.mockito.ArgumentMatchers.anyLong(),
+                org.mockito.ArgumentMatchers.any(org.springframework.data.domain.Pageable.class));
+    }
+
     private static User user(Long id, Role role) {
-        return User.builder()
-                .id(id)
-                .name("Test User")
-                .email("test@example.com")
-                .role(role)
-                .build();
+        return User.builder().id(id).name("Test User").email("test@example.com").role(role).build();
     }
 
     private static Bookings booking(Long id, Long createdBy, Long busId, BookingStatus status, LocalDateTime bookingDate) {
-        return Bookings.builder()
-                .id(id)
-                .createdBy(createdBy)
-                .busId(busId)
-                .sourceStationId(1L)
-                .destinationStationId(2L)
-                .bookingDate(bookingDate)
-                .totalAmount(BigDecimal.valueOf(2500))
-                .status(status)
-                .createdAt(LocalDateTime.of(2026, 7, 1, 10, 30))
-                .updatedAt(LocalDateTime.of(2026, 7, 1, 10, 45))
-                .build();
+        return Bookings.builder().id(id).createdBy(createdBy).busId(busId).sourceStationId(1L).destinationStationId(2L).bookingDate(
+                bookingDate).totalAmount(BigDecimal.valueOf(2500)).status(status).createdAt(LocalDateTime.of(2026, 7, 1, 10, 30)).updatedAt(
+                        LocalDateTime.of(2026, 7, 1, 10, 45)).build();
     }
 
     private static BookingSeats seat(Long id, Bookings booking, Long passengerId, int seatNumber, SeatStatus status, Long createdBy) {
-        return BookingSeats.builder()
-                .id(id)
-                .bookingId(booking)
-                .passengerId(passengerId)
-                .seatNumber(seatNumber)
-                .status(status)
-                .createdBy(createdBy)
-                .build();
+        return BookingSeats.builder().id(id).bookingId(booking).passengerId(passengerId).seatNumber(seatNumber).status(status).createdBy(
+                createdBy).build();
     }
 
     private static BusInternalDTO busDetails() {

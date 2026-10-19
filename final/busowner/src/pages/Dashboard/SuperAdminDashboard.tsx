@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { toast } from 'react-toastify';
 import { RootState } from '../../store';
@@ -11,7 +11,7 @@ import {
   useGetBussQuery,
 } from '../../store/slices/busSlice';
 import BusTable from '../../components/tables/BusTable';
-import FullPageLoader from '../../components/common/FullPageLoader';
+import Loader from '../../components/common/Loader';
 import { BusQuery } from '../../types/bus';
 
 const FILTERS = [
@@ -51,40 +51,54 @@ export const SuperAdminDashboard: React.FC = () => {
     currentPage,
   } = useSelector((state: RootState) => state.busDetails);
 
-  const [queryParams, setQueryParams] = useState<BusQuery>({
-    page: currentPage,
-    approved,
-    pending,
-    rejected,
-  });
+  const queryParams: BusQuery = useMemo(
+    () => ({
+      page: currentPage,
+      approved,
+      pending,
+      rejected,
+    }),
+    [currentPage, approved, pending, rejected]
+  );
 
   const { data, error, isFetching } = useGetBussQuery(queryParams);
-  const totalPage = data?.data?.totalPage || 0;
+  const totalPage = data?.data?.totalPage || totalPages || 1;
   const busList = data?.data?.result || [];
 
   useEffect(() => {
-    const changed =
-      (queryParams.pending && approved && !rejected) ||
-      (queryParams.pending && rejected && !approved) ||
-      (queryParams.approved && pending && !rejected) ||
-      (queryParams.approved && rejected && !pending) ||
-      (queryParams.rejected && approved && !pending) ||
-      (queryParams.rejected && pending && !approved);
+    if (data?.data?.totalPage !== undefined) {
+      dispatch(setTotalPages(data.data.totalPage));
+    }
+  }, [data, dispatch]);
 
-    let page = currentPage;
-    if (changed) { page = 1; dispatch(setCurrentPage(page)); }
-    setQueryParams({ page, approved, pending, rejected });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [approved, pending, rejected, currentPage]);
-
-  useEffect(() => { dispatch(setTotalPages(totalPage)); }, [data]); // eslint-disable-line
   useEffect(() => {
-    if (error) toast.warn((error as any).message || 'Failed to fetch buses');
+    if (error) {
+      toast.error((error as any).message || (error as any).data?.message || 'Failed to fetch buses');
+    }
   }, [error]);
 
-  const onChangePage = (newPage: number) => dispatch(setCurrentPage(newPage));
+  const onChangePage = (newPage: number) => {
+    dispatch(setCurrentPage(newPage));
+  };
+
+  const handleTabChange = (action: () => any) => {
+    dispatch(action());
+    dispatch(setCurrentPage(1));
+  };
+
   const activeFilter = pending ? 'pending' : approved ? 'approved' : 'rejected';
   const activeCount = busList.length;
+
+  const pageWindow = useMemo(() => {
+    const delta = 2;
+    const pages: number[] = [];
+    const start = Math.max(1, currentPage - delta);
+    const end = Math.min(totalPage, currentPage + delta);
+    for (let p = start; p <= end; p++) {
+      pages.push(p);
+    }
+    return pages;
+  }, [currentPage, totalPage]);
 
   return (
     <div className="page-container animate-fade-in">
@@ -95,7 +109,7 @@ export const SuperAdminDashboard: React.FC = () => {
           <p className="text-sm text-slate-500 mt-1 font-medium">Review, approve, and manage all bus registrations</p>
         </div>
         <div className="hidden sm:flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5">
-          <div className={`w-2 h-2 rounded-full ${FILTERS.find(f => f.key === activeFilter)?.dotColor} animate-pulse`} />
+          <div className={`w-2 h-2 rounded-full ${FILTERS.find((f) => f.key === activeFilter)?.dotColor} animate-pulse`} />
           <span className="text-xs font-semibold text-slate-600 capitalize">{activeFilter}</span>
           <span className="text-xs text-slate-400 ml-1">{activeCount} buses</span>
         </div>
@@ -109,8 +123,8 @@ export const SuperAdminDashboard: React.FC = () => {
             <button
               key={key}
               type="button"
-              onClick={() => dispatch(action())}
-              className={`px-5 py-2 rounded-xl text-sm font-semibold transition-all duration-200 ${
+              onClick={() => handleTabChange(action)}
+              className={`px-5 py-2 rounded-xl text-sm font-semibold transition-all duration-200 cursor-pointer ${
                 isActive ? activeClass : 'text-slate-500 hover:text-slate-800 hover:bg-white/60'
               }`}
             >
@@ -124,13 +138,24 @@ export const SuperAdminDashboard: React.FC = () => {
       <div className="card overflow-hidden">
         <div className="card-header flex items-center justify-between">
           <h2 className="section-title capitalize">{activeFilter} Buses</h2>
-          <span className="text-xs text-slate-400 font-medium">Page {currentPage} of {totalPages || 1}</span>
+          <span className="text-xs text-slate-400 font-medium">
+            Page {currentPage} of {totalPage}
+          </span>
         </div>
-        {busList.length === 0 && !isFetching ? (
+        {isFetching ? (
+          <div className="py-16 text-center">
+            <Loader text="Loading buses..." />
+          </div>
+        ) : busList.length === 0 ? (
           <div className="p-16 text-center">
             <div className="flex flex-col items-center gap-3 text-slate-400">
               <svg className="w-14 h-14" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={1.2}
+                  d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                />
               </svg>
               <p className="text-sm font-semibold">No {activeFilter} buses found</p>
             </div>
@@ -141,19 +166,38 @@ export const SuperAdminDashboard: React.FC = () => {
       </div>
 
       {/* Pagination */}
-      {totalPages > 1 && (
+      {totalPage > 1 && (
         <div className="flex items-center justify-center gap-2 mt-6">
-          <button type="button" onClick={() => onChangePage(currentPage - 1)} disabled={currentPage <= 1} className="btn-secondary px-3 py-2 disabled:opacity-40">
+          <button
+            type="button"
+            onClick={() => onChangePage(currentPage - 1)}
+            disabled={currentPage <= 1}
+            className="btn-secondary px-3 py-2 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+          >
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
             </svg>
           </button>
-          {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
+
+          {pageWindow[0] > 1 && (
+            <>
+              <button
+                type="button"
+                onClick={() => onChangePage(1)}
+                className="w-9 h-9 rounded-xl text-sm font-semibold bg-white border border-slate-200 text-slate-600 hover:bg-primary-50 cursor-pointer"
+              >
+                1
+              </button>
+              {pageWindow[0] > 2 && <span className="px-1 text-slate-400 text-sm">...</span>}
+            </>
+          )}
+
+          {pageWindow.map((p) => (
             <button
               key={p}
               type="button"
               onClick={() => onChangePage(p)}
-              className={`w-9 h-9 rounded-xl text-sm font-semibold transition-all ${
+              className={`w-9 h-9 rounded-xl text-sm font-semibold transition-all cursor-pointer ${
                 p === currentPage
                   ? 'bg-primary-600 text-white shadow-sm'
                   : 'bg-white border border-slate-200 text-slate-600 hover:bg-primary-50 hover:border-primary-200'
@@ -162,15 +206,34 @@ export const SuperAdminDashboard: React.FC = () => {
               {p}
             </button>
           ))}
-          <button type="button" onClick={() => onChangePage(currentPage + 1)} disabled={currentPage >= totalPages} className="btn-secondary px-3 py-2 disabled:opacity-40">
+
+          {pageWindow[pageWindow.length - 1] < totalPage && (
+            <>
+              {pageWindow[pageWindow.length - 1] < totalPage - 1 && (
+                <span className="px-1 text-slate-400 text-sm">...</span>
+              )}
+              <button
+                type="button"
+                onClick={() => onChangePage(totalPage)}
+                className="w-9 h-9 rounded-xl text-sm font-semibold bg-white border border-slate-200 text-slate-600 hover:bg-primary-50 cursor-pointer"
+              >
+                {totalPage}
+              </button>
+            </>
+          )}
+
+          <button
+            type="button"
+            onClick={() => onChangePage(currentPage + 1)}
+            disabled={currentPage >= totalPage}
+            className="btn-secondary px-3 py-2 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+          >
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
             </svg>
           </button>
         </div>
       )}
-
-      <FullPageLoader open={isFetching} />
     </div>
   );
 };

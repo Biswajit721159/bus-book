@@ -1,8 +1,8 @@
 package com.bus.booking_service.entities;
-import jakarta.persistence.*;
-import lombok.*;
-import java.time.LocalDateTime;
 
+import jakarta.persistence.*;
+import java.time.LocalDateTime;
+import lombok.*;
 
 @Entity
 @Table(name = "wishlist")

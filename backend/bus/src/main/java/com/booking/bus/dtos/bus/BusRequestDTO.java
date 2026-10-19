@@ -4,13 +4,18 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
-import lombok.Data;
-
 import java.util.List;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class BusRequestDTO {
     @NotBlank(message = "Bus Name is required")
     @Size(min = 3, max = 50, message = "Bus Name must be between 3 and 50 characters")
@@ -20,7 +25,8 @@ public class BusRequestDTO {
     @Max(value = 300, message = "Total seat cannot exceed 300")
     private int totalSeat;
 
-    @NotEmpty(message = "At least one station is required")
+    @NotNull(message = "Stations list is required")
+    @Size(min = 2, max = 30, message = "A bus route must have at least 2 stations (source and destination)")
     @Valid
     private List<StationRequestDTO> stations;
 

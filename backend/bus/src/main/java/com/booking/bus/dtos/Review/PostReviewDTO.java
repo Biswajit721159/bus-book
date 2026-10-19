@@ -1,4 +1,5 @@
 package com.booking.bus.dtos.Review;
+
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
@@ -18,5 +19,4 @@ public class PostReviewDTO {
 
     @Size(min = 5, max = 300, message = "review message must be between 5 and 300 characters")
     private String message;
-
 }
