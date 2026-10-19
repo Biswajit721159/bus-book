@@ -27,19 +27,22 @@ export const Register: React.FC = () => {
 
   const heading =
     step === 1
-      ? { title: 'Create an account', subtitle: 'Register as a bus owner or admin' }
+      ? {
+          title: 'Join as Fleet Partner',
+          subtitle: 'Create your bus operator account to list routes, manage schedules, and accept daily passenger bookings.',
+        }
       : {
-          title: 'Verify your email',
+          title: 'Verify Your Email Address',
           subtitle: (
-            <>
-              We&apos;ve sent a 6-digit verification code to <br />
-              <span className="font-semibold text-slate-800">{emailForOtp}</span>
-            </>
+            <span>
+              We've sent a 6-digit verification code to <br />
+              <strong className="text-slate-900 font-semibold">{emailForOtp}</strong>
+            </span>
           ),
         };
 
   return (
-    <AuthCard title={heading.title} subtitle={heading.subtitle} maxWidth="max-w-lg">
+    <AuthCard title={heading.title} subtitle={heading.subtitle} maxWidth="max-w-xl">
       {step === 1 ? (
         <RegisterForm onSubmit={onRegisterSubmit} isLoading={isLoading} />
       ) : (
@@ -55,21 +58,24 @@ export const Register: React.FC = () => {
             <button
               type="button"
               onClick={goBack}
-              className="text-sm font-semibold text-slate-500 hover:text-slate-800 transition-colors"
+              className="text-xs font-bold text-slate-500 hover:text-slate-800 transition-colors inline-flex items-center gap-1.5 cursor-pointer"
             >
-              &larr; Back to Registration
+              <span>← Back to Registration Details</span>
             </button>
           </div>
         </div>
       )}
 
       {step === 1 && (
-        <p className="text-center text-sm text-slate-500 mt-8">
-          Already have an account?{' '}
-          <Link to="/Login" className="text-indigo-600 hover:text-indigo-700 font-semibold transition-colors">
-            Sign in
+        <div className="mt-8 pt-6 border-t border-slate-100 text-center text-xs text-slate-500">
+          <span>Already registered as a bus operator? </span>
+          <Link
+            to="/Login"
+            className="text-blue-600 hover:text-blue-700 font-bold transition-colors ml-1"
+          >
+            Sign in here ➔
           </Link>
-        </p>
+        </div>
       )}
     </AuthCard>
   );

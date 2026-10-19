@@ -11,6 +11,7 @@ interface SelectFieldProps extends SelectHTMLAttributes<HTMLSelectElement> {
   placeholder?: string;
   error?: string;
   containerCls?: string;
+  labelClassName?: string;
 }
 
 const SelectField = forwardRef<HTMLSelectElement, SelectFieldProps>(
@@ -23,6 +24,7 @@ const SelectField = forwardRef<HTMLSelectElement, SelectFieldProps>(
       containerCls = '',
       className = '',
       id,
+      labelClassName = '',
       ...props
     },
     ref
@@ -30,7 +32,7 @@ const SelectField = forwardRef<HTMLSelectElement, SelectFieldProps>(
     return (
       <div className={`w-full ${containerCls}`}>
         {label && (
-          <label htmlFor={id} className="input-label">
+          <label htmlFor={id} className={`block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5 ${labelClassName}`}>
             {label}
           </label>
         )}

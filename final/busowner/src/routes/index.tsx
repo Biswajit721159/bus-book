@@ -9,11 +9,11 @@ import WelcomePage from "../pages/WelcomePage";
 import Dashboard from "../pages/Dashboard";
 import Login from "../pages/Login";
 import Register from "../pages/Register";
+import Buses from "../pages/Buses";
 import AddBus from "../pages/Buses/AddBus";
 import EditBus from "../pages/Buses/EditBus";
 import ViewBus from "../pages/Buses/ViewBus";
 import Bookings from "../pages/Bookings";
-// import Drivers from "../pages/Drivers";
 import RoutesPage from "../pages/Routes";
 import Settings from "../pages/Settings";
 
@@ -95,8 +95,24 @@ export const AppRoutes: React.FC = () => {
 					</PrivateRoute>
 				}
 			/>
+			<Route
+				path="/ManageUsers"
+				element={
+					<PrivateRoute>
+						<Dashboard />
+					</PrivateRoute>
+				}
+			/>
 
 			{/* Private Bus Pages */}
+			<Route
+				path="/Buses"
+				element={
+					<PrivateRoute>
+						<Buses />
+					</PrivateRoute>
+				}
+			/>
 			<Route
 				path="/Buses/AddBus"
 				element={
@@ -107,6 +123,14 @@ export const AppRoutes: React.FC = () => {
 			/>
 			<Route
 				path="/Buses/EditBus"
+				element={
+					<PrivateRoute>
+						<EditBus />
+					</PrivateRoute>
+				}
+			/>
+			<Route
+				path="/Buses/EditBus/:_id"
 				element={
 					<PrivateRoute>
 						<EditBus />
@@ -132,15 +156,8 @@ export const AppRoutes: React.FC = () => {
 				}
 			/>
 
-			{/* Private Drivers & Route Visualizers */}
-			{/* <Route
-				path="/Drivers"
-				element={
-					<PrivateRoute>
-						<Drivers />
-					</PrivateRoute>
-				}
-			/> */}
+			{/* Redirect /Drivers */}
+			<Route path="/Drivers" element={<Navigate to="/Dashboard" replace />} />
 			<Route
 				path="/Routes"
 				element={

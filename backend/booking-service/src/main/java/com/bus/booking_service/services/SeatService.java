@@ -1,80 +1,44 @@
 package com.bus.booking_service.services;
 
 import com.bus.booking_service.dtos.CheckSeatCountRequestBodyDTO;
-import com.bus.booking_service.dtos.common.ApiResponse;
-import com.bus.booking_service.entities.Bookings;
+import com.bus.booking_service.dtos.bus.NormalUserBusResponseDto;
+import com.bus.booking_service.dtos.bus.StationResponseDTO;
 import com.bus.booking_service.entities.BookingSeats;
-import com.bus.booking_service.enums.BookingStatus;
+import com.bus.booking_service.entities.Bookings;
 import com.bus.booking_service.enums.SeatStatus;
 import com.bus.booking_service.exceptions.BadRequestException;
 import com.bus.booking_service.exceptions.ResourceNotFoundException;
+import com.bus.booking_service.internals.busApi;
 import com.bus.booking_service.repository.BookingRepository;
 import com.bus.booking_service.repository.BookingSeatRepository;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestClient;
-
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
 
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class SeatService {
 
-    @Autowired
-    private BookingRepository bookingRepository;
+    private final BookingRepository bookingRepository;
+    private final BookingSeatRepository bookingSeatRepository;
+    private final busApi busApi;
 
-    @Autowired
-    private BookingSeatRepository bookingSeatRepository;
+    private Set<Integer> getBookedSeats(CheckSeatCountRequestBodyDTO body, NormalUserBusResponseDto busDetails) {
+        StationResponseDTO sourceStation = busDetails.getStations().stream().filter(st -> st.getStationName().equalsIgnoreCase(body
+                .getSource())).findFirst().orElseThrow(() -> new BadRequestException("Source station not found on the bus"));
 
-    private final RestClient restClient = RestClient.builder().baseUrl("http://localhost:8005").build();
-
-    @Data
-    @NoArgsConstructor
-    public static class BusDetailsDTO {
-        private Long busId;
-        private String busName;
-        private int totalSeat;
-        private List<StationDetailsDTO> stations;
-    }
-
-    @Data
-    @NoArgsConstructor
-    public static class StationDetailsDTO {
-        private Long id;
-        private String stationName;
-        private int stationOrder;
-        private int distanceFromLastStation;
-    }
-
-    private BusDetailsDTO fetchBusDetails(Long busId) {
-        try {
-            ApiResponse<BusDetailsDTO> response = restClient.get()
-                    .uri("/api/buses/" + busId)
-                    .retrieve()
-                    .body(new ParameterizedTypeReference<ApiResponse<BusDetailsDTO>>() {
-                    });
-            return response != null ? response.getData() : null;
-        } catch (Exception e) {
-            log.error("Failed to fetch details for bus ID: {}", busId, e);
-            throw new ResourceNotFoundException("Bus details could not be retrieved from the bus service");
-        }
-    }
-
-    private Set<Integer> getBookedSeats(CheckSeatCountRequestBodyDTO body, BusDetailsDTO busDetails) {
-        StationDetailsDTO sourceStation = busDetails.getStations().stream().filter(st -> st.getStationName().equalsIgnoreCase(body.getSource())).findFirst().orElseThrow(() -> new BadRequestException("Source station not found on the bus"));
-
-        StationDetailsDTO destStation = busDetails.getStations().stream().filter(st -> st.getStationName().equalsIgnoreCase(body.getDist())).findFirst().orElseThrow(() -> new BadRequestException("Destination station not found on the bus"));
+        StationResponseDTO destStation = busDetails.getStations().stream().filter(st -> st.getStationName().equalsIgnoreCase(body
+                .getDist())).findFirst().orElseThrow(() -> new BadRequestException("Destination station not found on the bus"));
 
         int sourceOrder = sourceStation.getStationOrder();
         int destOrder = destStation.getStationOrder();
 
-        Map<Long, Integer> stationOrderMap = busDetails.getStations().stream().collect(Collectors.toMap(StationDetailsDTO::getId, StationDetailsDTO::getStationOrder));
+        Map<Long, Integer> stationOrderMap = busDetails.getStations().stream().collect(Collectors.toMap(StationResponseDTO::getId,
+                StationResponseDTO::getStationOrder));
 
         LocalDateTime bookingDateTime = body.getBookingDate().atStartOfDay();
         List<Bookings> activeBookings = bookingRepository.findByBusIdAndDate(body.getBusId(), bookingDateTime);
@@ -101,7 +65,7 @@ public class SeatService {
 
     public int getFreeSeatCount(CheckSeatCountRequestBodyDTO body) {
         log.info("Fetching free seat count for Bus: {} from '{}' to '{}'", body.getBusId(), body.getSource(), body.getDist());
-        BusDetailsDTO busDetails = fetchBusDetails(body.getBusId());
+        NormalUserBusResponseDto busDetails = busApi.getBusById(body.getBusId());
         if (busDetails == null) {
             throw new ResourceNotFoundException("Bus not found");
         }
@@ -112,7 +76,7 @@ public class SeatService {
 
     public Map<String, Object> getSeatListInfo(CheckSeatCountRequestBodyDTO body) {
         log.info("Fetching seat list and distance for Bus: {} from '{}' to '{}'", body.getBusId(), body.getSource(), body.getDist());
-        BusDetailsDTO busDetails = fetchBusDetails(body.getBusId());
+        NormalUserBusResponseDto busDetails = busApi.getBusById(body.getBusId());
         if (busDetails == null) {
             throw new ResourceNotFoundException("Bus not found");
         }
@@ -128,15 +92,17 @@ public class SeatService {
         }
 
         // Calculate total distance
-        StationDetailsDTO sourceStation = busDetails.getStations().stream().filter(st -> st.getStationName().equalsIgnoreCase(body.getSource())).findFirst().orElseThrow(() -> new BadRequestException("Source station not found on the bus"));
+        StationResponseDTO sourceStation = busDetails.getStations().stream().filter(st -> st.getStationName().equalsIgnoreCase(body
+                .getSource())).findFirst().orElseThrow(() -> new BadRequestException("Source station not found on the bus"));
 
-        StationDetailsDTO destStation = busDetails.getStations().stream().filter(st -> st.getStationName().equalsIgnoreCase(body.getDist())).findFirst().orElseThrow(() -> new BadRequestException("Destination station not found on the bus"));
+        StationResponseDTO destStation = busDetails.getStations().stream().filter(st -> st.getStationName().equalsIgnoreCase(body
+                .getDist())).findFirst().orElseThrow(() -> new BadRequestException("Destination station not found on the bus"));
 
         int startOrder = sourceStation.getStationOrder();
         int endOrder = destStation.getStationOrder();
 
         int totalDistance = 0;
-        for (StationDetailsDTO s : busDetails.getStations()) {
+        for (StationResponseDTO s : busDetails.getStations()) {
             if (s.getStationOrder() > startOrder && s.getStationOrder() <= endOrder) {
                 totalDistance += s.getDistanceFromLastStation();
             }

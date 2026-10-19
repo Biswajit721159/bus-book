@@ -19,6 +19,9 @@ export const useViewTicket = (ticketId) => {
 			setLoad(true);
 			const res = await getBookingDetailsById(ticketId);
 			setData(res.data);
+			if (res.data?.id) {
+				getReview(res.data.id);
+			}
 		} catch (error) {
 			toast.error(error?.message || "Failed to fetch ticket details");
 		} finally {
@@ -26,13 +29,14 @@ export const useViewTicket = (ticketId) => {
 		}
 	};
 
-	const getReview = async () => {
+	const getReview = async (idToUse) => {
+		const targetId = idToUse || data?.id || data?._id || ticketId;
 		try {
 			setIsReviewLoading(true);
-			const res = await getIsReview(ticketId);
+			const res = await getIsReview(targetId);
 			setReviewData(res.data);
 		} catch (error) {
-			toast.error(error?.message || "Failed to fetch ticket details");
+			// Fail silently if review status cannot be retrieved
 		} finally {
 			setIsReviewLoading(false);
 		}
@@ -41,18 +45,19 @@ export const useViewTicket = (ticketId) => {
 	useEffect(() => {
 		if (ticketId) {
 			loadData();
-			getReview();
 		}
 	}, [ticketId]);
 
 	const addToFavouriteJourney = async () => {
+		const targetId = data?.id || data?._id || ticketId;
 		try {
 			setFavouriteJourneyLoader(true);
-			await addWishList(ticketId);
+			await addWishList(targetId);
 			setData((prev) => ({
 				...prev,
 				isWishlisted: true,
 			}));
+			toast.success("Journey added to wishlist!");
 		} catch (error) {
 			toast.error(error?.message || "Failed to add to wishlist");
 		} finally {
@@ -61,13 +66,15 @@ export const useViewTicket = (ticketId) => {
 	};
 
 	const removeFromFavouriteJourney = async () => {
+		const targetId = data?.id || data?._id || ticketId;
 		try {
 			setFavouriteJourneyLoader(true);
-			await removeWishList(ticketId);
+			await removeWishList(targetId);
 			setData((prev) => ({
 				...prev,
 				isWishlisted: false,
 			}));
+			toast.success("Journey removed from wishlist");
 		} catch (error) {
 			toast.error(error?.message || "Failed to remove from wishlist");
 		} finally {

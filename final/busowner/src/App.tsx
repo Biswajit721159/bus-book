@@ -6,7 +6,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from './store';
 import { Logout_User, setUserInfo } from './store/slices/authSlice';
 import { request } from './services/api/client';
-import FullPageLoader from './components/common/FullPageLoader';
+import Loader from './components/common/Loader';
 import AppRoutes from './routes';
 import { AuthApiResponse } from './types/auth';
 
@@ -44,7 +44,11 @@ export const App: React.FC = () => {
   }, []);
 
   if (load) {
-    return <FullPageLoader open={true} />;
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
+        <Loader text="Initializing BlueBus Admin..." />
+      </div>
+    );
   }
 
   return (

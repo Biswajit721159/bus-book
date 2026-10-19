@@ -1,4 +1,5 @@
 import { configureStore } from '@reduxjs/toolkit';
+import { setupListeners } from '@reduxjs/toolkit/query';
 import authReducer from './slices/authSlice';
 import busReducer, { busApiSlice } from './slices/busSlice';
 import bookingReducer, { bookingApiSlice } from './slices/bookingSlice';
@@ -20,6 +21,12 @@ const store = configureStore({
       userApiSlice.middleware
     ),
 });
+
+setupListeners(store.dispatch);
+
+export const invalidateBusCache = () => {
+  store.dispatch(busApiSlice.util.invalidateTags(['Bus']));
+};
 
 export type RootState = ReturnType<typeof store.getState>;
 export type AppDispatch = typeof store.dispatch;

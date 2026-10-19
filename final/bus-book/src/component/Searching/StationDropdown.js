@@ -73,25 +73,25 @@ export const StationDropdown = ({ value, onChange, stations, placeholder, label,
 				ref={triggerRef}
 				type="button"
 				onClick={open ? close_ : open_}
-				className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-150 text-left
-          ${open ? "bg-primary-50 ring-2 ring-primary-400 ring-inset" : "hover:bg-surface-50"}
+				className={`w-full flex items-center gap-2.5 px-3 py-2 sm:py-2.5 rounded-xl transition-all duration-150 text-left
+          ${open ? "bg-blue-50/80 ring-2 ring-blue-500 ring-inset" : "hover:bg-slate-50"}
           ${error && !open ? "ring-2 ring-red-400 ring-inset" : ""}`}
 			>
 				<div
-					className={`flex-shrink-0 w-9 h-9 rounded-full ${iconBg} flex items-center justify-center`}
+					className={`flex-shrink-0 w-8 h-8 rounded-lg ${iconBg} flex items-center justify-center border border-slate-200/60`}
 				>
 					{icon}
 				</div>
 				<div className="flex-1 min-w-0">
-					<p className="text-xs font-semibold text-surface-400 uppercase tracking-wider mb-0.5">
+					<p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">
 						{label}
 					</p>
 					{value ? (
-						<p className="text-sm font-bold text-surface-900 truncate">{value}</p>
+						<p className="text-xs sm:text-sm font-bold text-slate-900 truncate">{value}</p>
 					) : (
-						<p className="text-sm font-medium text-surface-400 truncate">{placeholder}</p>
+						<p className="text-xs sm:text-sm font-medium text-slate-400 truncate">{placeholder}</p>
 					)}
-					{error && !open && <p className="text-xs text-red-500 mt-0.5">{typeof error === "string" ? error : (error.message || "This field is required")}</p>}
+					{error && !open && <p className="text-[11px] text-red-500 mt-0.5">{typeof error === "string" ? error : (error.message || "This field is required")}</p>}
 				</div>
 				<div className="flex-shrink-0 flex items-center gap-1">
 					{value && (
@@ -99,7 +99,7 @@ export const StationDropdown = ({ value, onChange, stations, placeholder, label,
 							role="button"
 							tabIndex={-1}
 							onMouseDown={clearVal}
-							className="w-5 h-5 rounded-full bg-surface-200 hover:bg-red-100 flex items-center justify-center text-surface-400 hover:text-red-500 transition-colors"
+							className="w-5 h-5 rounded-full bg-slate-200 hover:bg-rose-100 flex items-center justify-center text-slate-500 hover:text-rose-600 transition-colors"
 						>
 							<svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
 								<path

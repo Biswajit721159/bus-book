@@ -1,14 +1,12 @@
 package com.bus.payment.entities;
 
 import com.bus.payment.enums.PaymentStatus;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
-import lombok.*;
-
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import lombok.*;
 
 @Entity
 @Table(name = "payments")
@@ -48,12 +46,10 @@ public class Payment {
     @NotBlank(message = "CVV is required")
     private String cardCvv;
 
-
     @Builder.Default
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private PaymentStatus status = PaymentStatus.PENDING;
-
 
     // ================= TIMESTAMPS =================
 
@@ -74,6 +70,4 @@ public class Payment {
     public void onUpdate() {
         this.updatedAt = LocalDateTime.now();
     }
-
-
 }

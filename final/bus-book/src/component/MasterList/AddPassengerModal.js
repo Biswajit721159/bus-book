@@ -1,4 +1,5 @@
 import React from "react";
+import { Spinner } from "../Loader";
 
 const AddPassengerModal = ({
 	isOpen,
@@ -11,68 +12,158 @@ const AddPassengerModal = ({
 }) => {
 	if (!isOpen) return null;
 
+	const charCount = (name || "").length;
+
 	return (
 		<div
-			className="modal-overlay"
+			className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in"
 			onClick={(e) => e.target === e.currentTarget && onClose()}
 		>
-			<div className="modal-box p-0 overflow-hidden shadow-2xl rounded-2xl bg-white border border-surface-100 animate-slide-up">
-				{/* Header */}
-				<div className="flex items-center justify-between px-6 py-4 border-b border-surface-100">
-					<h2 className="text-lg font-bold text-surface-900">Add Passenger</h2>
+			<div className="bg-white rounded-3xl shadow-2xl border border-slate-100 w-full max-w-lg overflow-hidden animate-slide-up">
+				{/* Modal Header */}
+				<div className="flex items-center justify-between px-6 py-5 border-b border-slate-100 bg-slate-50/70">
+					<div className="flex items-center gap-3">
+						<div className="w-10 h-10 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center font-bold">
+							<svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+								<path
+									strokeLinecap="round"
+									strokeLinejoin="round"
+									strokeWidth={2}
+									d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"
+								/>
+							</svg>
+						</div>
+						<div>
+							<h2 className="text-lg font-bold text-slate-900">Add New Passenger</h2>
+							<p className="text-xs text-slate-500 mt-0.5">
+								Save passenger profile for instant 1-click booking
+							</p>
+						</div>
+					</div>
+
 					<button
+						type="button"
 						onClick={onClose}
-						className="w-8 h-8 rounded-lg hover:bg-surface-100 flex items-center justify-center text-surface-400 hover:text-surface-600 transition-colors"
+						className="w-8 h-8 rounded-xl hover:bg-slate-200/60 flex items-center justify-center text-slate-400 hover:text-slate-700 transition-colors"
+						aria-label="Close modal"
 					>
-						<svg
-							className="w-4 h-4"
-							fill="none"
-							viewBox="0 0 24 24"
-							stroke="currentColor"
-						>
-							<path
-								strokeLinecap="round"
-								strokeLinejoin="round"
-								strokeWidth={2}
-								d="M6 18L18 6M6 6l12 12"
-							/>
+						<svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+							<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
 						</svg>
 					</button>
 				</div>
 
-				{/* Body */}
-				<div className="px-6 py-5">
-					<label className="label font-semibold text-sm text-surface-700 mb-1.5 block">Full Name</label>
-					<input
-						type="text"
-						value={name}
-						onChange={(e) => onChangeName(e.target.value)}
-						className={`input-field ${nameError ? "input-error border-red-400 focus:ring-red-400" : ""}`}
-						placeholder="e.g. John Doe"
-						autoFocus
-						spellCheck={false}
-						onKeyDown={(e) => e.key === "Enter" && onSubmit()}
-					/>
-					{nameError && <p className="mt-1.5 text-xs text-red-600">{nameError}</p>}
+				{/* Modal Body */}
+				<div className="p-6 space-y-4">
+					<div>
+						<div className="flex items-center justify-between mb-1.5">
+							<label className="text-xs font-bold text-slate-700 uppercase tracking-wider">
+								Full Name <span className="text-rose-500">*</span>
+							</label>
+							<span
+								className={`text-[11px] font-semibold ${
+									charCount > 50
+										? "text-rose-600"
+										: charCount >= 3
+										? "text-emerald-600"
+										: "text-slate-400"
+								}`}
+							>
+								{charCount}/50 chars
+							</span>
+						</div>
+
+						<div className="relative">
+							<input
+								type="text"
+								value={name}
+								onChange={(e) => onChangeName(e.target.value)}
+								className={`w-full px-4 py-3 bg-slate-50 border rounded-xl text-sm font-medium text-slate-900 placeholder-slate-400 transition-all focus:bg-white focus:outline-none focus:ring-2 ${
+									nameError
+										? "border-rose-400 focus:ring-rose-400/20"
+										: "border-slate-200 focus:border-blue-500 focus:ring-blue-500/20"
+								}`}
+								placeholder="e.g. Biswajit Ghosh"
+								autoFocus
+								spellCheck={false}
+								maxLength={50}
+								onKeyDown={(e) => e.key === "Enter" && onSubmit()}
+							/>
+							{name && (
+								<button
+									type="button"
+									onClick={() => onChangeName("")}
+									className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-1 rounded-lg"
+								>
+									<svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+										<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+									</svg>
+								</button>
+							)}
+						</div>
+
+						{nameError ? (
+							<p className="mt-2 text-xs font-semibold text-rose-600 flex items-center gap-1.5">
+								<svg className="w-3.5 h-3.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+									<path
+										fillRule="evenodd"
+										d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+										clipRule="evenodd"
+									/>
+								</svg>
+								<span>{nameError}</span>
+							</p>
+						) : (
+							<p className="mt-1.5 text-[11px] text-slate-400">
+								Only alphabets and spaces allowed (3 to 50 characters).
+							</p>
+						)}
+					</div>
+
+					{/* Tip Card */}
+					<div className="p-3.5 rounded-2xl bg-blue-50/70 border border-blue-100 flex items-start gap-2.5 text-xs text-blue-900 leading-relaxed">
+						<svg className="w-4 h-4 text-blue-600 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+							<path
+								strokeLinecap="round"
+								strokeLinejoin="round"
+								strokeWidth={2}
+								d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+							/>
+						</svg>
+						<span>
+							<strong>Pro Tip:</strong> Enter the name exactly as it appears on Government photo ID (Aadhaar, Passport, or Voter ID) for hassle-free bus boarding.
+						</span>
+					</div>
 				</div>
 
-				{/* Footer */}
-				<div className="flex gap-3 px-6 py-4 border-t border-surface-100 bg-surface-50/50">
-					<button onClick={onClose} disabled={isLoading} className="btn-secondary flex-1 py-2.5 rounded-lg">
+				{/* Modal Footer */}
+				<div className="flex items-center gap-3 px-6 py-4 border-t border-slate-100 bg-slate-50/70">
+					<button
+						type="button"
+						onClick={onClose}
+						disabled={isLoading}
+						className="flex-1 py-2.5 px-4 rounded-xl border border-slate-200 text-xs font-bold text-slate-700 hover:bg-slate-100 transition-colors"
+					>
 						Cancel
 					</button>
 					<button
+						type="button"
 						onClick={onSubmit}
-						disabled={isLoading}
-						className="btn-primary flex-1 py-2.5 rounded-lg flex items-center justify-center gap-1.5 shadow-sm"
+						disabled={isLoading || !name.trim()}
+						className="flex-1 inline-flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 active:bg-blue-800 disabled:opacity-50 disabled:cursor-not-allowed text-white text-xs font-bold shadow-md hover:shadow-lg transition-all duration-150"
 					>
 						{isLoading ? (
 							<>
-								<div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-								Adding...
+								<Spinner size="xs" color="white" />
+								<span>Saving Passenger...</span>
 							</>
 						) : (
-							"Add Passenger"
+							<>
+								<svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+									<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+								</svg>
+								<span>Add Passenger</span>
+							</>
 						)}
 					</button>
 				</div>

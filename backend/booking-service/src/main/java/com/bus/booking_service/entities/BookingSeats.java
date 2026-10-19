@@ -1,11 +1,11 @@
 package com.bus.booking_service.entities;
 
 import com.bus.booking_service.enums.SeatStatus;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
-import lombok.*;
-
 import java.time.LocalDateTime;
+import lombok.*;
 
 @Entity
 @Table(name = "booking_seats")
@@ -27,6 +27,7 @@ public class BookingSeats {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "booking_id", nullable = false)
     @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
+    @JsonIgnore
     private Bookings bookingId;
 
     @Column(name = "passenger_id", nullable = false)

@@ -1,11 +1,10 @@
 package com.bus.booking_service.dtos;
 
-import lombok.Data;
-
 import java.util.ArrayList;
 import java.util.List;
+import lombok.Data;
 
 @Data
 public class cancelTicketDTO {
-    List<Long> seatTicket=new ArrayList<>();
+    List<Long> seatTicket = new ArrayList<>();
 }

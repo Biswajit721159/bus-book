@@ -8,7 +8,7 @@ interface SubmitButtonProps {
 }
 
 /**
- * Reusable primary submit button with built-in loading spinner.
+ * Modern high-contrast submit button with smooth loading state
  */
 export const SubmitButton: React.FC<SubmitButtonProps> = ({
   isLoading,
@@ -19,18 +19,18 @@ export const SubmitButton: React.FC<SubmitButtonProps> = ({
   <button
     type="submit"
     disabled={isLoading}
-    className={`w-full py-3.5 text-base font-semibold text-white bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 rounded-xl shadow-[0_4px_14px_rgba(99,102,241,0.35)] hover:shadow-[0_6px_20px_rgba(99,102,241,0.45)] transition-all duration-200 active:scale-[0.98] flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed mt-6 ${className}`}
+    className={`w-full py-3.5 px-6 text-sm font-extrabold text-white bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 rounded-xl shadow-md shadow-blue-500/20 hover:shadow-lg hover:shadow-blue-500/30 transition-all duration-200 active:scale-[0.98] flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer ${className}`}
   >
     {isLoading ? (
       <>
-        <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-        {loadingLabel ?? label}
+        <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+        <span>{loadingLabel ?? label}</span>
       </>
     ) : (
       <>
-        {label}
+        <span>{label}</span>
         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M14 5l7 7m0 0l-7 7m7-7H3" />
         </svg>
       </>
     )}

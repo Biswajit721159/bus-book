@@ -1,10 +1,10 @@
 package com.auth.users.dtos.clients;
 
+import com.auth.users.enums.EmailType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import com.auth.users.enums.EmailType;
 
 @Data
 @AllArgsConstructor

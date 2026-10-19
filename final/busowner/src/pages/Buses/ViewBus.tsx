@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { busApi } from '../../services/apiService';
-import FullPageLoader from '../../components/common/FullPageLoader';
+import Loader from '../../components/common/Loader';
 import { toast } from 'react-toastify';
 import { Bus } from '../../types/bus';
 
@@ -22,16 +22,16 @@ export const ViewBus: React.FC = () => {
       }
     } catch (e: any) {
       toast.warn(e.message || 'Failed to load bus details');
-      navigate('/Dashboard');
+      if (!data?.bus_name) {
+        navigate('/Dashboard');
+      }
     } finally {
       setLoad(false);
     }
   };
 
   useEffect(() => {
-    if (Object.keys(location.state?.data || {}).length === 0) {
-      loadBus();
-    }
+    loadBus();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [_id]);
 
@@ -51,7 +51,11 @@ export const ViewBus: React.FC = () => {
         </div>
       </div>
 
-      {!load && (
+      {load ? (
+        <div className="card p-12 bg-white shadow-md rounded-2xl border border-slate-100 text-center">
+          <Loader text="Loading bus details..." />
+        </div>
+      ) : (
         <div className="space-y-5 animate-fade-in">
           <div className="card p-6 bg-white shadow-md rounded-2xl border border-slate-100">
             <h2 className="section-title mb-4">Bus Overview</h2>
@@ -104,7 +108,7 @@ export const ViewBus: React.FC = () => {
                     <div className={`pb-5 flex-1 ${ind === stations.length - 1 ? 'pb-0' : ''}`}>
                       <div className="flex items-start justify-between">
                         <div>
-                          <p className="font-semibold text-slate-850">{item.station}</p>
+                          <p className="font-semibold text-slate-800">{item.station}</p>
                           <p className="text-sm text-slate-500 mt-0.5 font-medium">
                             Arrival:{' '}
                             <span className="font-semibold text-slate-700">{item.arrived_time}</span>
@@ -124,8 +128,6 @@ export const ViewBus: React.FC = () => {
           )}
         </div>
       )}
-
-      <FullPageLoader open={load} />
     </div>
   );
 };

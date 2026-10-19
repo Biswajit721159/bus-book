@@ -4,7 +4,6 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { settingsSchema, type SettingsFormData } from '../../lib/validationSchemas';
 import { useSettings } from './hooks/useSettings';
 import InputField from '../../components/forms/InputField';
-import FullPageLoader from '../../components/common/FullPageLoader';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../store';
 
@@ -117,8 +116,6 @@ export const Settings: React.FC = () => {
           </form>
         </div>
       </div>
-
-      <FullPageLoader open={isLoading} />
     </div>
   );
 };

@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const api = process.env.REACT_APP_API_JAVA;
+const api = process.env.REACT_APP_API_JAVA || 'http://localhost:8080';
 
 const axiosInstance = axios.create({
   baseURL: api,
@@ -27,6 +27,26 @@ axiosInstance.interceptors.request.use(
     return config;
   },
   (error) => {
+    return Promise.reject(error);
+  }
+);
+
+// Response interceptor to handle 401 Unauthorized and 403 Forbidden globally
+axiosInstance.interceptors.response.use(
+  (response) => {
+    return response;
+  },
+  (error) => {
+    if (error.response && (error.response.status === 401 || error.response.status === 403)) {
+      // Clear expired user session from localStorage
+      localStorage.removeItem('user');
+
+      // Redirect to login page if not already there
+      const currentPath = window.location.pathname;
+      if (currentPath !== '/login' && currentPath !== '/register' && currentPath !== '/forgot-password') {
+        window.location.href = '/login';
+      }
+    }
     return Promise.reject(error);
   }
 );

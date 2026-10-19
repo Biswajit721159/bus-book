@@ -8,22 +8,25 @@ import com.bus.payment.enums.PaymentStatus;
 import com.bus.payment.exceptions.ConflictException;
 import com.bus.payment.repository.PaymentRepository;
 import jakarta.transaction.Transactional;
+import java.util.HashMap;
+import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 
-import java.util.HashMap;
-import java.util.Map;
-
 @Slf4j
 @Service
 public class PaymentService {
-    @Autowired
-    private PaymentRepository paymentRepository;
+    private final PaymentRepository paymentRepository;
+    private final RestClient restClient;
 
-    private final RestClient restClient = RestClient.builder().baseUrl("http://localhost:8006").build();
+    public PaymentService(PaymentRepository paymentRepository,
+            @Value("${booking.service.url:http://localhost:8006}") String bookingServiceUrl) {
+        this.paymentRepository = paymentRepository;
+        this.restClient = RestClient.builder().baseUrl(bookingServiceUrl).build();
+    }
 
     @Transactional
     public Long createPayment(PaymentRequestBodyDTO body, User currentUser) {
@@ -37,7 +40,7 @@ public class PaymentService {
         newPayment.setCardExpiryDate(body.getCardExpiryDate());
         newPayment.setTotalAmount(body.getTotalAmount());
         newPayment.setStatus(PaymentStatus.PROCESSING);
-        
+
         paymentRepository.save(newPayment);
 
         // Make synchronous REST call to booking-service to confirm booking
@@ -50,11 +53,9 @@ public class PaymentService {
             confirmPayload.put("totalAmount", newPayment.getTotalAmount());
             confirmPayload.put("busId", newPayment.getBusId());
 
-            ApiResponse<Map<String, Object>> response = restClient.post()
-                    .uri("/api/booking/confirm")
-                    .body(confirmPayload)
-                    .retrieve()
-                    .body(new ParameterizedTypeReference<ApiResponse<Map<String, Object>>>() {});
+            ApiResponse<Map<String, Object>> response = restClient.post().uri("/api/booking/confirm").body(confirmPayload).retrieve().body(
+                    new ParameterizedTypeReference<ApiResponse<Map<String, Object>>>() {
+                    });
 
             if (response != null && response.getData() != null && Boolean.TRUE.equals(response.getData().get("success"))) {
                 newPayment.setStatus(PaymentStatus.DONE);
@@ -67,10 +68,11 @@ public class PaymentService {
                 throw new ConflictException("Seat lock expired. Your payment has been refunded.");
             }
         } catch (Exception e) {
+            System.err.println(e.getMessage() + e);
             log.error("Failed to confirm booking for payment ID: {}", newPayment.getId(), e);
             newPayment.setStatus(PaymentStatus.REFUNDED);
             paymentRepository.save(newPayment);
-            
+
             if (e instanceof ConflictException) {
                 throw (ConflictException) e;
             }

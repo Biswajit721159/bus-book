@@ -6,14 +6,23 @@ import com.bus.booking_service.dtos.passenger.passengerMap;
 import com.bus.booking_service.entities.BookingSeats;
 import com.bus.booking_service.entities.Bookings;
 import com.bus.booking_service.enums.BookingStatus;
-import lombok.Data;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class BookingTicketResponseDTo {
     private Long id;
+    private String pnrNumber;
     private busDTO bus;
     private sourceStationDTO sourceStation;
     private distStationDTO distStation;
@@ -27,23 +36,31 @@ public class BookingTicketResponseDTo {
 
     public BookingTicketResponseDTo(Bookings bookings, NormalUserBusResponseDto bus) {
         this.id = bookings.getId();
-        this.bus = new busDTO(bus);
-        this.sourceStation = new sourceStationDTO(bookings.getSourceStationId(), bus);
-        this.distStation = new distStationDTO(bookings.getDestinationStationId(), bus);
+        this.pnrNumber = bookings.getPnrNumber();
+        this.bus = bus != null ? new busDTO(bus) : null;
+
+        this.sourceStation = bus != null ? new sourceStationDTO(bookings.getSourceStationId(), bus) : null;
+        this.distStation = bus != null ? new distStationDTO(bookings.getDestinationStationId(), bus) : null;
         this.bookingDate = bookings.getBookingDate();
         this.totalAmount = bookings.getTotalAmount();
         this.status = bookings.getStatus();
         this.bookingTime = bookings.getCreatedAt();
-        this.totalDistance = getTotalDistance(bus,bookings.getSourceStationId(),bookings.getDestinationStationId()); // Decoupled from StationDistance helper
+        this.totalDistance = bus != null ? getTotalDistance(bus, bookings.getSourceStationId(), bookings.getDestinationStationId()) : 0;
     }
 
     public void setPassengerSeatMap(List<BookingSeats> seats, List<masterListResponseDTO> masterList) {
         Map<Long, masterListResponseDTO> masterListMap = new HashMap<>();
-        for (masterListResponseDTO masterListResponseDTO : masterList) {
-            masterListMap.put(masterListResponseDTO.getId(), masterListResponseDTO);
+        if (masterList != null) {
+            for (masterListResponseDTO masterListResponseDTO : masterList) {
+                if (masterListResponseDTO != null && masterListResponseDTO.getId() != null) {
+                    masterListMap.put(masterListResponseDTO.getId(), masterListResponseDTO);
+                }
+            }
         }
-        for (BookingSeats seat : seats) {
-            seatDetails.add(new passengerMap(seat, masterListMap.getOrDefault(seat.getPassengerId(), null)));
+        if (seats != null) {
+            for (BookingSeats seat : seats) {
+                seatDetails.add(new passengerMap(seat, masterListMap.getOrDefault(seat.getPassengerId(), null)));
+            }
         }
     }
 
@@ -52,12 +69,12 @@ public class BookingTicketResponseDTo {
     }
 
     public int getTotalDistance(NormalUserBusResponseDto bus, Long SourceStationId, Long destinationStationId) {
+        if (bus == null || bus.getStations() == null || bus.getStations().isEmpty()) {
+            return 0;
+        }
 
-        List<StationResponseDTO> sortedStations = bus
-                .getStations()
-                .stream()
-                .sorted(Comparator.comparingInt(StationResponseDTO::getStationOrder))
-                .toList();
+        List<StationResponseDTO> sortedStations = bus.getStations().stream().sorted(Comparator.comparingInt(
+                StationResponseDTO::getStationOrder)).toList();
 
         StationResponseDTO start = null;
         StationResponseDTO end = null;
@@ -89,5 +106,4 @@ public class BookingTicketResponseDTo {
         }
         return distance;
     }
-
 }

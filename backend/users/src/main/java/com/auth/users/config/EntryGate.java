@@ -1,6 +1,7 @@
 package com.auth.users.config;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import java.util.Arrays;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -15,58 +16,33 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
-import java.util.Arrays;
-
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
+@RequiredArgsConstructor
 public class EntryGate {
     @Value("${cors.allowed.origins}")
     private String allowedOrigins;
 
-    @Autowired
-    private GatewayHeaderFilter authFilter;
+    private final GatewayHeaderFilter authFilter;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http
-                .cors(Customizer.withDefaults())
-                .csrf(csrf -> csrf.disable()) // Disable CSRF for API endpoints if necessary
+        http.cors(Customizer.withDefaults()).csrf(csrf -> csrf.disable()) // Disable CSRF for API endpoints if necessary
                 .authorizeHttpRequests(auth -> auth
-                        // Allow unauthenticated access to auth endpoints (login/register/verify)
-                        .requestMatchers(
-                                "/api/health",
-                                "/api/health/",
-                                "/error",
-                                "/api/auth/login",
-                                "/api/auth/login/verify-otp",
-                                "/api/auth/register",
-                                "/api/auth/register/verify-otp",
-                                "/api/auth/verify-email",
-                                "/api/auth/resent-otp",
-                                "/api/auth/forgot-password",
-                                "/api/auth/reset-password",
-                                "/api/auth/google-login",
-                                "/api/bus-owner/login",
-                                "/api/bus-owner/register",
-                                "/api/bus-owner/google-login",
-                                "/api/bus-owner/login/verify-otp",
-                                "/api/bus-owner/register/verify-otp",
-                                "/api/bus-owner/forgot-password",
-                                "/api/bus-owner/reset-password",
-                                "/api/bus-owner/resent-otp",
-                                "/v3/api-docs",
-                                "/v3/api-docs/**",
-                                "/swagger-ui/**",
-                                "/swagger-ui.html",
-                                "/messages",
-                                "/api/master-list/internal/**"
-                        ).permitAll()
-                        // All other endpoints require authentication (including /api/auth/users)
-                        .anyRequest().authenticated()
-                )
-                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .addFilterBefore(authFilter, UsernamePasswordAuthenticationFilter.class);
+                        // Allow unauthenticated access to auth endpoints
+                        // (login/register/verify)
+                        .requestMatchers("/api/health", "/api/health/", "/error", "/api/auth/login", "/api/auth/login/verify-otp",
+                                "/api/auth/register", "/api/auth/register/verify-otp", "/api/auth/resend-otp", "/api/auth/resent-otp",
+                                "/api/auth/forgot-password", "/api/auth/reset-password", "/api/auth/google-login", "/api/bus-owner/login",
+                                "/api/bus-owner/register", "/api/bus-owner/google-login", "/api/bus-owner/login/verify-otp",
+                                "/api/bus-owner/register/verify-otp", "/api/bus-owner/forgot-password", "/api/bus-owner/reset-password",
+                                "/api/bus-owner/resend-otp", "/api/bus-owner/resent-otp", "/v3/api-docs", "/v3/api-docs/**",
+                                "/swagger-ui/**", "/swagger-ui.html", "/messages", "/api/master-list/internal/**").permitAll()
+                        // All other endpoints require authentication (including
+                        // /api/auth/users)
+                        .anyRequest().authenticated()).sessionManagement(session -> session.sessionCreationPolicy(
+                                SessionCreationPolicy.STATELESS)).addFilterBefore(authFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }

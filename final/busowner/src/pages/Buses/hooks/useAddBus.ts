@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { busApi } from '../../../services/apiService';
+import { invalidateBusCache } from '../../../store';
 import type { StationData } from '../../../types/bus';
 import type { BusInfoFormData } from '../../../lib/validationSchemas';
 
@@ -67,12 +68,13 @@ export const useAddBus = (): UseAddBusReturn => {
       const res = await busApi.create(busName, totalSeats, stationList);
       if (res.statusCode === 201) {
         toast.success(res.message || 'Bus registered successfully');
+        invalidateBusCache();
         navigate('/Dashboard');
       } else {
         toast.warn(res.message || 'Failed to register bus');
       }
     } catch (err: any) {
-      toast.warn(err.message || 'An error occurred during submission.');
+      toast.error(err.message || 'An error occurred during submission.');
     } finally {
       setIsLoading(false);
     }

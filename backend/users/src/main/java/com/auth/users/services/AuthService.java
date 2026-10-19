@@ -1,35 +1,34 @@
 package com.auth.users.services;
 
-import com.auth.users.dtos.user.*;
-import com.auth.users.entities.User;
-import com.auth.users.enums.Role;
 import com.auth.users.appExceptions.BadRequestException;
 import com.auth.users.appExceptions.ConflictException;
 import com.auth.users.appExceptions.ResourceNotFoundException;
 import com.auth.users.appExceptions.UnauthorizedException;
+import com.auth.users.dtos.user.*;
+import com.auth.users.entities.User;
+import com.auth.users.enums.Role;
 import com.auth.users.repository.UserRepository;
-import jakarta.transaction.Transactional;
-import org.springframework.beans.factory.annotation.Value;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.stereotype.Service;
-
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
 import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.gson.GsonFactory;
-
+import jakarta.transaction.Transactional;
 import java.security.SecureRandom;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.Optional;
 import java.util.UUID;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
 
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class AuthService {
 
     @Value("${google.client.id}")
@@ -41,33 +40,41 @@ public class AuthService {
     private static final SecureRandom secureRandom = new SecureRandom();
     private static final PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
-    @Autowired
-    private UserRepository userRepository;
+    private final UserRepository userRepository;
+    private final NotificationClientService notificationClientService;
+    private final JwtService jwtUtil;
+    private GoogleIdTokenVerifier googleTokenVerifier;
 
-    @Autowired
-    private NotificationClientService notificationClientService;
-
-    @Autowired
-    private JwtService jwtUtil;
+    @jakarta.annotation.PostConstruct
+    public void initGoogleVerifier() {
+        if (googleClientId != null && !googleClientId.isBlank()) {
+            this.googleTokenVerifier = new GoogleIdTokenVerifier.Builder(new NetHttpTransport(), GsonFactory.getDefaultInstance())
+                    .setAudience(Collections.singletonList(googleClientId)).build();
+        }
+    }
 
     @Transactional
     public void register(RegisterDTO body) {
         log.info("Processing registration for email: {}", body.getEmail());
-        Optional<User> existedUser = userRepository.findByEmail(body.getEmail());
+        Optional<User> existedUser = userRepository.findByEmail(body.getEmail().trim().toLowerCase());
         User user;
 
         if (existedUser.isPresent()) {
-            if (existedUser.get().isEmailVerified()) {
+            User existing = existedUser.get();
+            if (existing.isEmailVerified()) {
                 throw new ConflictException("Email already exists");
-            } else {
-                user = existedUser.get();
-                user.setName(body.getName());
-                user.setPassword(passwordEncoder.encode(body.getPassword()));
             }
+            if (existing.getOtpGenerateTime() != null && existing.getOtpGenerateTime().plusMinutes(15).isAfter(LocalDateTime.now())) {
+                throw new ConflictException(
+                        "Registration is already pending verification for this email. Please check your inbox or request a new OTP.");
+            }
+            user = existing;
+            user.setName(body.getName().trim());
+            user.setPassword(passwordEncoder.encode(body.getPassword()));
         } else {
             user = new User();
-            user.setName(body.getName());
-            user.setEmail(body.getEmail());
+            user.setName(body.getName().trim());
+            user.setEmail(body.getEmail().trim().toLowerCase());
             user.setPassword(passwordEncoder.encode(body.getPassword()));
             user.setEmailVerified(false);
         }
@@ -75,30 +82,35 @@ public class AuthService {
         setOtpAndExpiryTime(user, otp);
         userRepository.saveAndFlush(user);
 
-        notificationClientService.sendEmailOtpRequest(user.getEmail(), "Verify your BusBooking account", otp, "Confirm your registration with BusBooking", user);
+        notificationClientService.sendEmailOtpRequest(user.getEmail(), "Verify your BusBooking account", otp,
+                "Confirm your registration with BusBooking", user);
     }
 
     @Transactional
     public void registerBusOwner(BusOwnerRegisterDTO body) {
         log.info("Processing bus owner registration for email: {}", body.getEmail());
-        Optional<User> existedUser = userRepository.findByEmail(body.getEmail());
+        Optional<User> existedUser = userRepository.findByEmail(body.getEmail().trim().toLowerCase());
         User user;
 
         if (existedUser.isPresent()) {
-            if (existedUser.get().isEmailVerified()) {
+            User existing = existedUser.get();
+            if (existing.isEmailVerified()) {
                 throw new ConflictException("Email already exists");
-            } else {
-                user = existedUser.get();
-                user.setName(body.getFullName());
-                user.setPassword(passwordEncoder.encode(body.getPassword()));
-                user.setCompanyName(body.getCompanyName());
-                user.setPhoneNumber(body.getPhoneNumber());
-                user.setRole(Role.BUS_OWNER);
             }
+            if (existing.getOtpGenerateTime() != null && existing.getOtpGenerateTime().plusMinutes(15).isAfter(LocalDateTime.now())) {
+                throw new ConflictException(
+                        "Registration is already pending verification for this email. Please check your inbox or request a new OTP.");
+            }
+            user = existing;
+            user.setName(body.getFullName().trim());
+            user.setPassword(passwordEncoder.encode(body.getPassword()));
+            user.setCompanyName(body.getCompanyName());
+            user.setPhoneNumber(body.getPhoneNumber());
+            user.setRole(Role.BUS_OWNER);
         } else {
             user = new User();
-            user.setName(body.getFullName());
-            user.setEmail(body.getEmail());
+            user.setName(body.getFullName().trim());
+            user.setEmail(body.getEmail().trim().toLowerCase());
             user.setPassword(passwordEncoder.encode(body.getPassword()));
             user.setCompanyName(body.getCompanyName());
             user.setPhoneNumber(body.getPhoneNumber());
@@ -109,7 +121,8 @@ public class AuthService {
         setOtpAndExpiryTime(user, otp);
         userRepository.saveAndFlush(user);
 
-        notificationClientService.sendEmailOtpRequest(user.getEmail(), "Verify your Bus Owner account", otp, "Confirm your registration with BusBooking", user);
+        notificationClientService.sendEmailOtpRequest(user.getEmail(), "Verify your Bus Owner account", otp,
+                "Confirm your registration with BusBooking", user);
     }
 
     @Transactional
@@ -160,11 +173,13 @@ public class AuthService {
         userRepository.save(user);
 
         String subject = user.isEmailVerified() ? "Your BusBooking login OTP" : "Verify your BusBooking account";
-        String purpose = user.isEmailVerified() ? "Verify your identity to log in to BusBooking" : "Confirm your registration with BusBooking";
+        String purpose = user.isEmailVerified() ? "Verify your identity to log in to BusBooking"
+                : "Confirm your registration with BusBooking";
 
         notificationClientService.sendEmailOtpRequest(user.getEmail(), subject, otp, purpose, user);
 
-        return user.isEmailVerified() ? "OTP sent to email. Verify OTP to complete login" : "Email is not verified. OTP sent to email for verification";
+        return user.isEmailVerified() ? "OTP sent to email. Verify OTP to complete login"
+                : "Email is not verified. OTP sent to email for verification";
     }
 
     @Transactional
@@ -192,13 +207,8 @@ public class AuthService {
         clearOtpAndExpiryTime(user);
         userRepository.save(user);
 
-        return LoginResponseDTO.builder()
-                .token(jwtUtil.generateToken(user))
-                .email(user.getEmail())
-                .name(user.getName())
-                .role(user.getRole() != null ? user.getRole().name() : null)
-                .companyName(user.getCompanyName())
-                .phoneNumber(user.getPhoneNumber())
+        return LoginResponseDTO.builder().token(jwtUtil.generateToken(user)).email(user.getEmail()).name(user.getName()).role(user
+                .getRole() != null ? user.getRole().name() : null).companyName(user.getCompanyName()).phoneNumber(user.getPhoneNumber())
                 .build();
     }
 
@@ -206,7 +216,7 @@ public class AuthService {
     public String adminLogin(LoginDTO body) {
         log.info("Processing admin login request for email: {}", body.getEmail());
         User user = userRepository.findByEmail(body.getEmail()).orElseThrow(() -> new UnauthorizedException("Invalid email or password"));
-        
+
         if (user.getRole() == Role.NORMAL_USER) {
             throw new UnauthorizedException("Access denied. Admin privileges required.");
         }
@@ -218,7 +228,7 @@ public class AuthService {
     public LoginResponseDTO verifyAdminLoginOtp(OtpVerificationDTO body) {
         log.info("Verifying admin login OTP for email: {}", body.getEmail());
         User user = userRepository.findByEmail(body.getEmail()).orElseThrow(() -> new ResourceNotFoundException("User not found"));
-        
+
         if (user.getRole() == Role.NORMAL_USER) {
             throw new UnauthorizedException("Access denied. Admin privileges required.");
         }
@@ -243,7 +253,8 @@ public class AuthService {
         userRepository.save(user);
 
         String subject = user.isEmailVerified() ? "Your BusBooking login OTP" : "Verify your BusBooking account";
-        String purpose = user.isEmailVerified() ? "Verify your identity to log in to BusBooking" : "Confirm your registration with BusBooking";
+        String purpose = user.isEmailVerified() ? "Verify your identity to log in to BusBooking"
+                : "Confirm your registration with BusBooking";
 
         notificationClientService.sendEmailOtpRequest(user.getEmail(), subject, otp, purpose, user);
     }
@@ -261,7 +272,8 @@ public class AuthService {
         setOtpAndExpiryTime(user, otp);
         userRepository.save(user);
 
-        notificationClientService.sendEmailOtpRequest(user.getEmail(), "Reset your BusBooking password", otp, "Reset your BusBooking account password", user);
+        notificationClientService.sendEmailOtpRequest(user.getEmail(), "Reset your BusBooking password", otp,
+                "Reset your BusBooking account password", user);
     }
 
     @Transactional
@@ -282,10 +294,11 @@ public class AuthService {
     public LoginResponseDTO googleLogin(GoogleLoginDTO body) {
         log.info("Processing Google login request");
         try {
-            NetHttpTransport transport = new NetHttpTransport();
-            GsonFactory jsonFactory = GsonFactory.getDefaultInstance();
-
-            GoogleIdTokenVerifier verifier = new GoogleIdTokenVerifier.Builder(transport, jsonFactory).setAudience(Collections.singletonList(googleClientId)).build();
+            GoogleIdTokenVerifier verifier = this.googleTokenVerifier;
+            if (verifier == null) {
+                verifier = new GoogleIdTokenVerifier.Builder(new NetHttpTransport(), GsonFactory.getDefaultInstance()).setAudience(
+                        Collections.singletonList(googleClientId)).build();
+            }
 
             GoogleIdToken idToken = verifier.verify(body.getToken());
             if (idToken == null) {
@@ -322,13 +335,8 @@ public class AuthService {
                 userRepository.saveAndFlush(user);
             }
 
-            return LoginResponseDTO.builder()
-                    .token(jwtUtil.generateToken(user))
-                    .email(user.getEmail())
-                    .name(user.getName())
-                    .role(user.getRole() != null ? user.getRole().name() : null)
-                    .companyName(user.getCompanyName())
-                    .phoneNumber(user.getPhoneNumber())
+            return LoginResponseDTO.builder().token(jwtUtil.generateToken(user)).email(user.getEmail()).name(user.getName()).role(user
+                    .getRole() != null ? user.getRole().name() : null).companyName(user.getCompanyName()).phoneNumber(user.getPhoneNumber())
                     .build();
 
         } catch (Exception e) {
@@ -344,10 +352,11 @@ public class AuthService {
     public LoginResponseDTO adminGoogleLogin(GoogleLoginDTO body) {
         log.info("Processing Admin Google login request");
         try {
-            NetHttpTransport transport = new NetHttpTransport();
-            GsonFactory jsonFactory = GsonFactory.getDefaultInstance();
-
-            GoogleIdTokenVerifier verifier = new GoogleIdTokenVerifier.Builder(transport, jsonFactory).setAudience(Collections.singletonList(googleClientId)).build();
+            GoogleIdTokenVerifier verifier = this.googleTokenVerifier;
+            if (verifier == null) {
+                verifier = new GoogleIdTokenVerifier.Builder(new NetHttpTransport(), GsonFactory.getDefaultInstance()).setAudience(
+                        Collections.singletonList(googleClientId)).build();
+            }
 
             GoogleIdToken idToken = verifier.verify(body.getToken());
             if (idToken == null) {
@@ -378,13 +387,8 @@ public class AuthService {
                 userRepository.save(user);
             }
 
-            return LoginResponseDTO.builder()
-                    .token(jwtUtil.generateToken(user))
-                    .email(user.getEmail())
-                    .name(user.getName())
-                    .role(user.getRole() != null ? user.getRole().name() : null)
-                    .companyName(user.getCompanyName())
-                    .phoneNumber(user.getPhoneNumber())
+            return LoginResponseDTO.builder().token(jwtUtil.generateToken(user)).email(user.getEmail()).name(user.getName()).role(user
+                    .getRole() != null ? user.getRole().name() : null).companyName(user.getCompanyName()).phoneNumber(user.getPhoneNumber())
                     .build();
 
         } catch (Exception e) {
